@@ -1,0 +1,19 @@
+# GDExtension
+/godot-cpp
+
+# Rogo
+.rogo
+/Build
+BuildLocal.rogue
+/LinkedProjects.txt
+Local.rogo
+
+# SCons
+.sconsign.dblite
+
+# Test Project
+/TestPlasmacore
+
+# Vim
+*.swo
+*.swp
