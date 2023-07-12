@@ -1,5 +1,6 @@
 # GDExtension
 /godot-cpp
+*.os
 
 # Rogo
 .rogo

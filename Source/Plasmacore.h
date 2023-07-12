@@ -5,13 +5,12 @@
 #define PLASMACORE_H
 
 #ifdef WIN32
-  #include <windows.h>
+	#include <windows.h>
 #endif
 
 #include <godot_cpp/classes/node.hpp>
+#include <godot_cpp/classes/camera3d.hpp>
 #include <godot_cpp/classes/material.hpp>
-#include <godot_cpp/classes/node.hpp>
-#include <godot_cpp/classes/node3d.hpp>
 
 using namespace godot;
 
@@ -24,9 +23,9 @@ class Plasmacore : public Node
 
 	public:
 		// PROPERTIES
-		float         scale = 1.0f;
-		Vector3       position;
-		Node*         node = nullptr;
+		float				 scale = 1.0f;
+		Vector2			 display_size;
+		ObjectID			camera;
 		Ref<Material> material;
 
 		// CONSTRUCTOR METHODS
@@ -35,16 +34,16 @@ class Plasmacore : public Node
 
 		// PROPERTY ACCESS METHODS
 		Ref<Material> get_material() { return material; }
-		void          set_material( Ref<Material> p_material ) { material = p_material; }
+		void					set_material( const Ref<Material> &p_material ) { material = p_material; }
 
-		Node* get_node() { return node; }
-		void  set_node( Node* p_node ) { node = p_node; }
+		Camera3D* get_camera();
+		void			set_camera( Camera3D* p_camera );
 
-		Vector3 get_position() { return position; }
-		void    set_position( Vector3 p_position ) { position = p_position; }
+		Vector2 get_position() { return display_size; }
+		void		set_position( Vector2 p_position ) { display_size = p_position; }
 
 		float get_scale() { return scale; }
-		void  set_scale( float p_scale ) { scale = p_scale; }
+		void	set_scale( float p_scale ) { scale = p_scale; }
 
 		// GENERAL METHODS
 		int add_one( int parameter );
