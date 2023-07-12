@@ -4,6 +4,7 @@
 #include <godot_cpp/godot.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include "Plasmacore.h"
+#include "Plasmacore.h"
 
 using namespace godot;
 
