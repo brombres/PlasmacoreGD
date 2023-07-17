@@ -1,11 +1,12 @@
 module Plasmacore
 
-class Log [singleton]
+class Log : BufferedPrintWriter<<output_buffer>> [singleton]
   NATIVE
     nativeHeader @|#include <godot_cpp/variant/utility_functions.hpp>
 
   METHODS
-    method hello
+    method flush( buffer:String )
       native
-        @|godot::UtilityFunctions::print( "[Plasmacore] Hello Rogue!" );
+      @|godot::UtilityFunctions::print( $buffer->data->as_utf8 );
+      buffer.clear
 endClass

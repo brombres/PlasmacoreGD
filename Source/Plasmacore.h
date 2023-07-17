@@ -8,6 +8,7 @@
 	#include <windows.h>
 #endif
 
+#include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/node.hpp>
 #include <godot_cpp/classes/camera3d.hpp>
 #include <godot_cpp/classes/material.hpp>
@@ -34,6 +35,15 @@ class Plasmacore : public Node
 		Plasmacore();
 		~Plasmacore();
 
+    void _ready() override
+    {
+      if ( !Engine::get_singleton()->is_editor_hint() )
+      {
+        Rogue_clean_up();
+        Rogue_launch();
+      }
+    }
+
 		// PROPERTY ACCESS METHODS
 		Ref<Material> get_material() { return material; }
 		void					set_material( const Ref<Material> &p_material ) { material = p_material; }
@@ -50,11 +60,6 @@ class Plasmacore : public Node
 		// GENERAL METHODS
 		int add_one( int parameter );
 
-    void _ready() override
-    {
-      Rogue_clean_up();
-      Rogue_launch();
-    }
 };
 
 #endif // PLASMACORE_H
