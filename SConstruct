@@ -21,8 +21,7 @@ env.Append(CPPPATH=["Source/"])
 sources = Glob("Source/*.cpp")
 
 if env["platform"] == "macos":
-  add_sources(sources, "Source", "m")
-  add_sources(sources, "Source", "mm")
+  add_sources(sources, "Source/Generated", "mm")
 
   # Example - uncomment and adjust as desired
   #env.Append(
@@ -41,8 +40,7 @@ if env["platform"] == "macos":
 
 else:
   if env["platform"] == "ios":
-    add_sources(sources, "Source", "m")
-    add_sources(sources, "Source", "mm")
+    add_sources(sources, "Source/Generated", "mm")
 
     # Example - uncomment and adjust as desired
     #env.Append(

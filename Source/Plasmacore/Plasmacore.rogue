@@ -1,0 +1,3 @@
+module Plasmacore
+
+$include Plasmacore/Log

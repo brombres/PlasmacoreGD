@@ -12,6 +12,8 @@
 #include <godot_cpp/classes/camera3d.hpp>
 #include <godot_cpp/classes/material.hpp>
 
+#include "Generated/RogueProgram.h"
+
 using namespace godot;
 
 class Plasmacore : public Node
@@ -47,6 +49,12 @@ class Plasmacore : public Node
 
 		// GENERAL METHODS
 		int add_one( int parameter );
+
+    void _ready() override
+    {
+      Rogue_clean_up();
+      Rogue_launch();
+    }
 };
 
 #endif // PLASMACORE_H

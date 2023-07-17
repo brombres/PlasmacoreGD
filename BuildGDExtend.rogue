@@ -25,7 +25,7 @@ routine rogo_default
   # Builds the extension for the current platform's default architecture.
   if (File("Source").exists)
     if (File("Source").listing("*.cpp").count > 1)
-      build( default_os )
+      build( "$.default.debug"(default_os) )
     else
       deps
 
@@ -94,53 +94,46 @@ routine rogo_init( extension_name:String )
 endRoutine
 
 # 'rogo help build' custom per-OS description
-block builder = String()
-  local platforms = supported_platforms
+block
+  local desc = ...
+    @|Builds the GDExtension.
+     |
+     |TARGETS ($OS-specific)
+     |  platforms:     [$PLATFORMS]
+     |  architectures: [$ARCHITECTURES]
+     |  modes:         [debug|release]
+     |
+     |DESCRIPTION
+     |  Any combination of target options can be given, in any order. By example:
+     |
+
+   localize default_os
+  desc += table(
+    [
+      ["rogo build","Builds the extension for the current OS and architecture, debug."],
+      ["rogo build release","Builds the extension for the current OS and architecture, release."],
+      ["rogo build debug release","Builds the extension for the current OS and architecture, debug and release."],
+      ["rogo build $"(default_os),"Builds extensions for $, all architectures, debug and release."(default_os)],
+      ["rogo build android web","Builds extensions for Android and Web, all architectures, debug and release."],
+      ["rogo build android arm64 debug","Builds extension for Android, arm64 architecture, debug."],
+      ["rogo build all","Builds extensions for all supported OS's, all architectures, debug and release."]
+    ],
+    Console.width.or_smaller(100) - 2
+  ).indented( 2 )
+  desc .= replacing( "$OS", System.os )
+  desc .= replacing( "$PLATFORMS", ["all"].[add(supported_platforms)].join('|') )
   local architectures = Set<<String>>()
-  architectures.[ add("all"), add("default") ]
-  architectures.add( forEach in supported_architectures(forEach in platforms) )
-  platforms = ["all","default"].[ add(platforms) ]
+  forEach (platform in supported_platforms)
+    architectures.add( forEach in supported_architectures(platform) )
+  endForEach
+  desc .= replacing( "$ARCHITECTURES", architectures.to_list.join('|') )
 
-  builder = ...
-    @|Builds the GDExtension for the specified platform(s) and architecture(s).
-     |
-     |platform:     [$PLATFORMS]
-     |architecture: [$ARCHITECTURES]
-     |mode:         [all|debug|release]
-     |
-     |'platform' and/or 'architecture' parts can be omitted, in which case 'default' is assumed.
-     |
-     |'mode' part can be omitted, in which case 'debug' is assumed.
-     |
-     |Parts can be specified in any order if unambiguous, e.g. 'debug.x86_64.windows'.
-     |
-     |'rogo build all' will build all supported platforms and architectures in both release and debug mode.
-  builder .= replacing( "$PLATFORMS", platforms.join('|') )
-  builder .= replacing( "$ARCHITECTURES", architectures.to_list.join("|") )
-
-  description( "build", builder )
+  description( "build", desc )
 endBlock
 
 routine rogo_build
-  # SYNTAX: rogo build [platform.architecture.mode]
-
-  #
-  # Builds the GDExtension for the specified platform(s) and architecture(s).
-  #
-  # platform:     [all|default|android|ios|linux|macos|web|windows]<br>
-  # architecture: [all|default|universal|x86_32|x86_64|arm32|arm64|rv64|ppc32|ppc64|wasm32]<br>
-  # mode:         [all|debug|release]
-  #
-  # 'platform' and/or 'architecture' parts can be omitted, in which case 'default' is assumed.
-  #
-  # 'mode' part can be omitted, in which case 'debug' is assumed.
-  #
-  # Parts can be specified in any order if unambiguous, e.g. 'debug.x86_64.windows'.
-  #
-  # 'rogo build all' will build all supported platforms and architectures in both release and debug mode.
-
+  # SYNTAX: rogo build [targets]
   build( System.command_line_arguments.cloned.[remove_first].join('.') )
-  # Allow both e.g. 'ios.arm64.debug' and 'ios arm64 debug'.
 endRoutine
 
 routine rogo_find( class_name:String )
@@ -233,14 +226,16 @@ routine build( target:String )
   local extension_name = which{ listing.count:listing.first || "" }
 
   local android_ndk_root = System.env//ANDROID_NDK_ROOT
-  if (not android_ndk_root)
-    local sdk = System.env//ANDROID_HOME
-    if (sdk)
-      local ndk = File(sdk) / "ndk"
-      if (ndk.exists)
-        local best = Best<<VersionNumber>>( $1 > $2 )
-        best.consider( File(forEach in ndk.listing).filename )
-        if (best.exists) android_ndk_root = ndk / best.value
+  if (config.platforms.contains("android"))
+    if (not android_ndk_root)
+      local sdk = System.env//ANDROID_HOME
+      if (sdk)
+        local ndk = File(sdk) / "ndk"
+        if (ndk.exists)
+          local best = Best<<VersionNumber>>( $1 > $2 )
+          best.consider( File(forEach in ndk.listing).filename )
+          if (best.exists) android_ndk_root = ndk / best.value
+        endIf
       endIf
     endIf
   endIf
@@ -259,9 +254,10 @@ routine build( target:String )
 
     local scons_platform = which{ platform=="web":"javascript" || platform }
 
-    local architectures = config.architectures
-    if (architectures.first == "all") architectures = all_architectures( platform )
-
+    local architectures = config.architectures.cloned
+    if (architectures.contains("all"))
+      architectures.[ clear, add(all_architectures(platform)) ]
+    endIf
     forEach (arch in architectures)
       forEach (mode in config.modes)
         header "Building GDExtension $ [$ $ $]"(extension_name,platform,arch,mode)
@@ -321,17 +317,17 @@ endRoutine
 routine supported_architectures( platform:String )->String[]
   which (platform)
     case "android"
-      return ["x86_64","arm64"]
+      return ["default","x86_64","arm64"]
     case "ios"
-      return ["universal","x86_64","arm64"]
+      return ["default","universal","x86_64","arm64"]
     case "linux"
-      return ["x86_64","arm64","rv64"]
+      return ["default","x86_64","arm64","rv64"]
     case "macos"
-      return ["universal","x86_64","arm64"]
+      return ["default","universal","x86_64","arm64"]
     case "web"
-      return ["wasm32"]
+      return ["default","wasm32"]
     case "windows"
-      return ["x86_32","x86_64"]
+      return ["default","x86_32","x86_64"]
     others
       throw Error( "[ERROR] Unsupported platform '$'."(platform) )
   endWhich
@@ -362,6 +358,48 @@ routine default_os->String
   return System.os.to_lowercase
 endRoutine
 
+routine table( contents:String[][], total_w:Int32 )->String
+  local w0 = 0
+  w0 .= or_larger( (forEach in contents)[0].count )
+  local w1 = 0
+  w1 .= or_larger( (forEach in contents)[1].count )
+
+  if (w0 + w1 + 3 > total_w)
+    w0 .= or_smaller( (total_w-3)/2 )
+    w1 = (total_w - 3 - w0)
+  endIf
+
+  local builder = String()
+  builder.print "┌"
+  loop (w0) builder.print "─"
+  builder.print "┬"
+  loop (w1) builder.print "─"
+  builder.println "┐"
+  forEach (row at j in contents)
+    if (j > 0)
+      builder.print "├"
+      loop (w0) builder.print "─"
+      builder.print "┼"
+      loop (w1) builder.print "─"
+      builder.println "┤"
+    endIf
+    local col0 = row[0].word_wrap( w0 ).iterator
+    local col1 = row[1].word_wrap( w1 ).iterator
+    while (col0.has_another or col1.has_another)
+      builder.print   "│"
+      builder.print   which{col0.has_another:col0.read||""}.justified(-w0)
+      builder.print   "│"
+      builder.print   which{col1.has_another:col1.read||""}.justified(-w1)
+      builder.println "│"
+    endWhile
+  endForEach
+  builder.print "└"
+  loop (w0) builder.print "─"
+  builder.print "┴"
+  loop (w1) builder.print "─"
+  builder.print "┘"
+  return builder
+endRoutine
 routine rogo_sync( project_filepath:String )
   # Syncs the specified project to be automatically kept up-to-date with this GDExtension's build products.
   # Multiple projects can be synced. Run 'rogo unsync <project_filepath>' to stop updating a project with new builds products.
@@ -514,7 +552,17 @@ routine deps( &check_for_update )
   endIf
 
   local patcher = GitIgnorePatcher( ".gitignore" )
+  patch_gitignore( patcher )
 
+  if (patcher.is_modified)
+    if (patcher.file.exists) header "Updating .gitignore"
+    else                     header "Creating .gitignore"
+    patcher.print_new_entries
+    patcher.save
+  endIf
+endRoutine
+
+routine patch_gitignore( patcher:GitIgnorePatcher )
   patcher.add( "# GDExtension", "/godot-cpp" )
   patcher.add( "# GDExtension", "*.os" )
 
@@ -528,13 +576,6 @@ routine deps( &check_for_update )
 
   patcher.add( "# Vim", "*.swo" )
   patcher.add( "# Vim", "*.swp" )
-
-  if (patcher.is_modified)
-    if (patcher.file.exists) header "Updating .gitignore"
-    else                     header "Creating .gitignore"
-    patcher.print_new_entries
-    patcher.save
-  endIf
 endRoutine
 
 routine execute( commands:String, error_message=null:String, &suppress_error )->Logical
@@ -555,9 +596,12 @@ endRoutine
 
 class BuildConfig
   GLOBAL PROPERTIES
-    PLATFORMS        = ["all","default","android","ios","javascript","js","linux","macos","web","windows"]
-    ARCHITECTURES    = ["all","default","universal","x86_32","x86_64","arm32","arm64","rv64","ppc32","ppc64","wasm32"]
-    MODES            = ["debug","release"]
+    PLATFORMS        = ["all","android","ios","javascript","js","linux","macos","uwp","web","windows"]
+    ARCHITECTURES    = ["default","x86_32","x86_64","arm32","arm64","rv64","ppc32","ppc64","wasm32","universal"]
+    MODES            = ["debug","release","dist","distributable"]
+    ALIASES = { "javascript":"web", "js":"web" } : [String:String]
+    PLATFORM_NAMES = { "android":"Android", "ios":"iOS", "linux":"Linux", "macos":"macOS",
+                       "uwp":"UWP", "web":"Web", "windows":"Windows" } : [String:String]
 
   PROPERTIES
     platforms = String[]
@@ -566,68 +610,53 @@ class BuildConfig
 
   METHODS
     method init( target_string:String )
-      if (not String.exists(target_string)) target_string = "default"
-
-      local targets = target_string.split('.')
-
-      local mode = targets.remove_first( BuildConfig.MODES.contains($) )
-      local platform = targets.remove_first( BuildConfig.PLATFORMS.contains($) )
-      local architecture = targets.remove_first( BuildConfig.ARCHITECTURES.contains($) )
-
-      if (platform == "javascript" or platform == "web") platform = "web"
-      if (not mode) mode = targets.remove_first( $ == "all" )
-
-      if (not targets.is_empty)
-        throw Error( "[ERROR] Invalid target '$'."(targets.first) )
-      endIf
-
       localize supported_platforms
 
-      if (not platform or platform == "default") platform = default_os
+      if (String.exists(target_string))
+        local targets = target_string.split('.')
+        forEach (target in targets)
+          which (target)
+            case "all"
+              platforms.add( supported_platforms )
+              nextIteration
+          endWhich
 
-      if (platform == "all")
-        platforms.add( supported_platforms )
-        if (not architecture) architecture = "all"
-      else
-        platforms.add( platform )
-        if (not supported_platforms.contains(platform))
-          throw Error( "Invalid platform target '$'. Valid platforms on $ are [$]."...
-                       (platform,System.os,supported_platforms.join("|")) )
-        endIf
-        if (not architecture) architecture = "default"
+          if (ALIASES.contains(target)) target = ALIASES[ target ]
+
+          if (PLATFORMS.contains(target))
+            if (not supported_platforms.contains(target))
+              throw Error( "Invalid platform target '$'. Valid platforms on $ are [$]."...
+                           (target,System.os,supported_platforms.join("|")) )
+            endIf
+            if (not platforms.contains(target)) platforms.add( target )
+          elseIf (ARCHITECTURES.contains(target))
+            if (not architectures.contains(target)) architectures.add( target )
+          elseIf (MODES.contains(target))
+            if (not modes.contains(target)) modes.add( target )
+          else
+            throw Error( "[ERROR] Invalid target: '$'."(target) )
+          endIf
+        endForEach
       endIf
 
-      if (platform == "all")
-        if (architecture == "all" or architecture == "default")
-          architectures.add( architecture )
-        else
+      if (platforms.is_empty)
+        platforms.add( default_os )
+        if (architectures.is_empty) architectures.add( "default" )
+        if (modes.is_empty) modes.add( "debug" )
+      else
+        if (architectures.is_empty) architectures.add( "all" )
+        if (modes.is_empty) modes.[ add("debug"), add("release") ]
+      endIf
+
+      if (architectures.count)
+        forEach (arch in architectures)
+          if (arch == "all" or arch == "default") nextIteration
           forEach (p in platforms)
-            if (not supported_architectures(p).contains(architecture))
-              throw Error( "[ERROR] Platform '$' does not support architecture '$'."(p,architecture) )
+            if (not supported_architectures(p).contains(arch))
+              throw Error( "[ERROR] Platform '$' does not support architecture '$'."(p,arch) )
             endIf
           endForEach
-        endIf
-      else
-        # Specific platform
-        if (architecture == "all")
-          architectures.add( all_architectures(platform) )
-        else
-          if (architecture != "default" and not supported_architectures(platform).contains(architecture))
-            throw Error( "[ERROR] Platform '$' does not support architecture '$'."(platform,architecture) )
-          endIf
-          architectures.add( architecture )
-        endIf
-      endIf
-
-      if (mode)
-        if (mode == "all") modes.[ add("debug"), add("release") ]
-        else               modes.add( mode )
-      else
-        if (platform == "all" or architecture == "all")
-          modes.[ add("debug"), add("release") ]
-        else
-          modes.add( "debug" )
-        endIf
+        endForEach
       endIf
 
 endClass

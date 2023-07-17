@@ -1,0 +1,11 @@
+module Plasmacore
+
+class Log [singleton]
+  NATIVE
+    nativeHeader @|#include <godot_cpp/variant/utility_functions.hpp>
+
+  METHODS
+    method hello
+      native
+        @|godot::UtilityFunctions::print( "[Plasmacore] Hello Rogue!" );
+endClass

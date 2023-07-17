@@ -1,0 +1,3 @@
+uses Plasmacore
+
+Log.hello
