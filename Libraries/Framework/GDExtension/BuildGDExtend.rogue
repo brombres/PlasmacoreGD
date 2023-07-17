@@ -400,6 +400,7 @@ routine table( contents:String[][], total_w:Int32 )->String
   builder.print "┘"
   return builder
 endRoutine
+
 routine rogo_sync( project_filepath:String )
   # Syncs the specified project to be automatically kept up-to-date with this GDExtension's build products.
   # Multiple projects can be synced. Run 'rogo unsync <project_filepath>' to stop updating a project with new builds products.
@@ -408,23 +409,20 @@ routine rogo_sync( project_filepath:String )
     return
   endIf
 
-  local filepaths = String[]
-  filepaths.add( forEach in System.command_line_arguments from 1 )
+  project_filepath = File( project_filepath ).abs
 
   local outputs = String[]
   local file =  File("LinkedProjects.txt")
   if (file.exists) outputs = String( file ).trimmed.split( '\n' )
-  forEach (filepath in filepaths)
-    if (not outputs.contains(filepath))
-      if (File(filepath).exists and File(filepath/"project.godot").exists)
-        outputs.add( filepath )
-      elseIf (File(filepath).exists)
-        println "[ERROR] $ does not contain a project.godot file - skipping."(filepath)
-      else
-        println "[ERROR] Filepath '$' does not exist - skipping."(filepath)
-      endIf
+  if (not outputs.contains(project_filepath))
+    if (File(project_filepath).exists and File(project_filepath/"project.godot").exists)
+      outputs.add( project_filepath )
+    elseIf (File(project_filepath).exists)
+      println "[ERROR] $ does not contain a project.godot file - skipping."(project_filepath)
+    else
+      println "[ERROR] Filepath '$' does not exist - skipping."(project_filepath)
     endIf
-  endForEach
+  endIf
   file.save( outputs.join('\n') + "\n" )
 
   rogo_sync( null )
@@ -432,15 +430,12 @@ endRoutine
 
 routine rogo_unsync( project_filepath:String )
   # Stops updating the specified Godot project with updated builds of this extension.
-  local filepaths = String[]
-  filepaths.add( forEach in System.command_line_arguments from 1 )
+  project_filepath = File( project_filepath ).abs
 
   local outputs = String[]
   local file =  File("LinkedProjects.txt")
   if (file.exists) outputs = String( file ).trimmed.split( '\n' )
-  forEach (filepath in filepaths)
-    outputs.remove( filepath )
-  endForEach
+  outputs.remove( project_filepath )
   file.save( outputs.join('\n') )
 endRoutine
 
@@ -1065,11 +1060,15 @@ endRoutine
 #   -Ipath/to/lib1/include -Lpath/to/lib1/library -I ...   # sample replacement
 
 routine syntax( command:String, text:String )
-  Build.rogo_syntax[ command ] = text
+  if (not Build.rogo_syntax.contains(command))
+    Build.rogo_syntax[ command ] = text
+  endIf
 endRoutine
 
 routine description( command:String, text:String )
-  Build.rogo_descriptions[ command ] = text
+  if (not Build.rogo_descriptions.contains(command))
+    Build.rogo_descriptions[ command ] = text
+  endIf
 endRoutine
 
 routine help( command:String, description_text=null:String, syntax_text=null:String )

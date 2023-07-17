@@ -3,7 +3,7 @@
 #include <godot_cpp/core/defs.hpp>
 #include <godot_cpp/godot.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
-#include "Plasmacore.h"
+#include "NativePlasmacore.h"
 
 using namespace godot;
 
@@ -22,7 +22,7 @@ void initialize_plasmacore_types(ModuleInitializationLevel p_level)
   }
 
   // ClassDB::register_class<ClassName>();
-  ClassDB::register_class<Plasmacore>();
+  ClassDB::register_class<NativePlasmacore>();
 }
 
 void uninitialize_plasmacore_types(ModuleInitializationLevel p_level)
