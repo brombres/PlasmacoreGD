@@ -1,0 +1,11 @@
+module Plasmacore
+
+nativeHeader @|#include <godot_cpp/classes/node.hpp>
+nativeHeader @|#include <godot_cpp/classes/object.hpp>
+nativeHeader @|#include <godot_cpp/variant/string.hpp>
+nativeHeader @|#include <godot_cpp/variant/string_name.hpp>
+nativeHeader @|#include <godot_cpp/variant/utility_functions.hpp>
+
+$include Godot/ErrorLog
+$include Godot/Log
+$include Godot/Node

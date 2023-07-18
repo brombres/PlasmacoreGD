@@ -9,9 +9,4 @@ enum DisplayMode { Mode2DX, Mode2D, Mode3D }
 @export var camera_3d:Camera3D
 
 func _ready():
-    var root = $/root
-    print(root)
-    var n = root.get_child_count()
-    for i in range(n):
-        var node:Node = root.get_child( i )
-        print(node.name)
+	Plasmacore.on_new_scene()

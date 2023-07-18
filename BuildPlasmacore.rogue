@@ -26,9 +26,8 @@ endRoutine
 
 routine rogo_build
   rogo_build_rogue
-  if (not execute("(cd Libraries/Plasmacore/GDExtension && rogo build)",&suppress_error))
-    System.exit(1)  # avoid a double failure message from the nested Rogo builds
-  endIf
+	subrogo( "build skip_sync w=$"(Console.width) )
+	sync_products
 endRoutine
 
 routine rogo_build_rogue
@@ -157,7 +156,7 @@ routine rogo_copy_products( project_filepath:String, &needs_header )->Logical
   local project_folder = File( project_filepath )
   if (not project_folder.exists) return false
 
-  local output = subrogo( "copy products $ $ $"(project_folder.esc,needs_header,Console.width) )
+	local output = subrogo( "copy products $ $ $"(project_folder.esc,needs_header,Console.width), &capture_output )
   if (String.exists(output))
     synched_any = true
     needs_header = false
@@ -240,16 +239,23 @@ routine copy( filename:String, project_path:String, &needs_header )->Logical
   return copied_any
 endRoutine
 
-routine subrogo( args="":String )->String
+routine subrogo( args="":String, &capture_output )->String
   local cmd = "cd Libraries/Plasmacore/GDExtension && rogo".appending(args)
-  local result = Process.run( cmd, &env )
-  local output = result->String
-  if (not result.success)
-    error.println output
-    System.exit(1)  # avoid a double failure message from the nested Rogo build
-  endIf
-  if (output.count) println output
-  return output
+	if (capture_output)
+		local result = Process.run( cmd, &env )
+		local output = result->String
+		if (not result.success)
+			error.println output
+			System.exit(1)  # avoid a double failure message from the nested Rogo build
+		endIf
+		if (output.count) println output
+		return output
+	else
+		if (not execute("($)"(cmd), &suppress_error))
+			System.exit(1)  # avoid a double failure message from the nested Rogo build
+		endIf
+		return ""
+	endIf
 endRoutine
 
 routine banner( content:String )

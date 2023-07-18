@@ -2,11 +2,11 @@ extends Node
 
 @onready var plasmacore:NativePlasmacore = NativePlasmacore.new()
 
-# Called when the node enters the scene tree for the first time.
 func _ready():
 	plasmacore.launch()
 
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta):
+func _process(_delta):
 	plasmacore.on_update()
+
+func on_new_scene():
+	plasmacore.on_new_scene( $/root )

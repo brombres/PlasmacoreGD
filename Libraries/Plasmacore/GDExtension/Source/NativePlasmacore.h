@@ -25,17 +25,12 @@ class NativePlasmacore : public RefCounted
 		static void _bind_methods();
 
 	public:
-		// PROPERTIES
-		//float				 scale = 1.0f;
-		//Vector2			 display_size;
-		//ObjectID			camera;
-		//Ref<Material> material;
-
 		// CONSTRUCTOR METHODS
 		NativePlasmacore();
 		~NativePlasmacore();
 
     void launch();
+		void on_new_scene( Node* root );
     void on_update();
 
     //void _ready() override

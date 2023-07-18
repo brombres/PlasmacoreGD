@@ -18,6 +18,8 @@ augment Build
     GODOT_EXE_LINUX   = ""
 
     GODOT_CPP_BRANCH = "4.1"
+
+		console_width : Int32
 endAugment
 
 routine rogo_default
@@ -130,9 +132,19 @@ block
   description( "build", desc )
 endBlock
 
-routine rogo_build( &skip_sync )
+routine rogo_build
   # SYNTAX: rogo build [targets]
-  build( System.command_line_arguments.cloned.[remove_first].join('.'), &=skip_sync )
+	local args = System.command_line_arguments.cloned.[remove_first]
+
+	local skip_sync = args.contains( "skip_sync" )
+	args.remove( "skip_sync" )
+
+	if local w_arg = args.find( $.begins_with("w=") )
+		Build.console_width = w_arg.after_last('=')->Int32
+		args.remove( w_arg )
+	endIf
+
+	build( args.join('.'), &=skip_sync )
 endRoutine
 
 routine rogo_find( class_name:String )
@@ -1008,6 +1020,8 @@ class CreateClass
 endClass
 
 routine banner( content:String, w=Console.width:Int32 )
+	w .= or_larger( Build.console_width )
+
   local n = w.or_smaller(100)
   content .= word_wrapped( n-2 )
 

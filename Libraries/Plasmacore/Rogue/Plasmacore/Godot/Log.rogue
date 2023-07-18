@@ -1,0 +1,9 @@
+module Plasmacore
+
+class Log : BufferedPrintWriter<<output_buffer>> [singleton]
+  METHODS
+    method flush( buffer:String )
+			if (buffer.ends_with('\n')) buffer.remove_last
+      native @|godot::UtilityFunctions::print( $buffer->data->as_utf8 );
+      buffer.clear
+endClass

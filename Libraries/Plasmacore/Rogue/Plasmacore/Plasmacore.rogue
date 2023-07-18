@@ -1,4 +1,21 @@
 module Plasmacore
 
-$include Plasmacore/Log
-$include Plasmacore/Log
+$include Plasmacore/Godot
+
+class Plasmacore [essential api singleton]
+	PROPERTIES
+		root : Node
+
+	METHODS
+		method init
+			Global.output = Log
+			Global.error = ErrorLog
+
+		method on_new_scene( root_pointer:RogueNodePointer )
+			println "Rogue new scene!"
+			root = Node( root_pointer )
+			println  root
+			forEach (child in root)
+				println "$:$ $"(child,child.class_name,child.filepath)
+			endForEach
+endClass

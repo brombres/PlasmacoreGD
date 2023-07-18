@@ -1,0 +1,38 @@
+module Plasmacore
+
+NATIVE_POINTER_TYPE<<RogueNodePointer,"godot::Node*">>
+
+class Node( native_node:RogueNodePointer ) [compound]
+	METHODS
+		method class_name->String
+			local result : String
+			native @|$result = RogueString_create( $native_node.value->get_class().utf8().get_data() );
+			return result
+
+		method count->Int32
+			local result : Int32
+			native @|$result = $native_node.value->get_child_count();
+			return result
+
+		method filepath->String
+			local result : String
+			native @|$result = RogueString_create( $native_node.value->get_scene_file_path().utf8().get_data() );
+			return result
+
+		method get( index:Int32 )->Node
+			local child : RogueNodePointer
+			native @|$child = (RogueNodePointer){ $native_node.value->get_child( $index ) };
+			return Node( child )
+
+		method last->Node
+			return this[ count-1 ]
+
+		method name->String
+			local result : String
+			native @|$result = RogueString_create( ((godot::String)$native_node.value->get_name()).utf8().get_data() );
+			return result
+
+		method to->String
+			return name
+
+endClass
