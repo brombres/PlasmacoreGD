@@ -2,7 +2,7 @@
 # to this folder and type "rogo" at the command line, or "rogo help" for a list
 # of supported commands.
 
-$requireRogue "2.24"
+$requireRogue "2.25"
 
 uses Math/Best
 uses Utility/GitIgnorePatcher
@@ -32,7 +32,7 @@ routine rogo_default
 
       println
 
-      header "Create native class"
+      banner "Create native class"
       print_wrap "Specify the first native class in the extension, e.g. 'GDTest' or 'GDTest extends Node'/'GDTest:Node' etc."
       local type_name = Console.input( "> " )
       if (type_name) type_name .= trimmed
@@ -58,7 +58,7 @@ routine rogo_default
       build( default_os )
     endIf
   else
-    header "Create GDExtension framework"
+    banner "Create GDExtension framework"
     print_wrap...
       "Enter extension name, e.g. 'gdtest'."
       local name = Console.input( "> " )
@@ -130,9 +130,9 @@ block
   description( "build", desc )
 endBlock
 
-routine rogo_build
+routine rogo_build( &skip_sync )
   # SYNTAX: rogo build [targets]
-  build( System.command_line_arguments.cloned.[remove_first].join('.') )
+  build( System.command_line_arguments.cloned.[remove_first].join('.'), &=skip_sync )
 endRoutine
 
 routine rogo_find( class_name:String )
@@ -202,17 +202,17 @@ routine find_header( class_name:String, &as_header, &expanded_search )->String
     endIf
 
     if (as_header)
-      header "Cannot find the header for class '$'. "(class_name) +
+      banner "Cannot find the header for class '$'. "(class_name) +
              "Manually add the appropriate #include."
     else
-      header "Cannot find the file that defines class '$'. "(class_name)
+      banner "Cannot find the file that defines class '$'. "(class_name)
     endIf
 
     return ""
   endIf
 endRoutine
 
-routine build( target:String )
+routine build( target:String, &skip_sync )
   local config = BuildConfig( target )
 
   if (not File("Source").exists)
@@ -259,7 +259,7 @@ routine build( target:String )
     endIf
     forEach (arch in architectures)
       forEach (mode in config.modes)
-        header "Building GDExtension $ [$ $ $]"(extension_name,platform,arch,mode)
+        banner "Building GDExtension $ [$ $ $]"(extension_name,platform,arch,mode)
         local cmd = "scons platform=$ target=template_$"(scons_platform,mode)
         if (arch != "default") cmd .= appending( "arch=$"(arch) )
         if (platform == "android") cmd .= appending( "ANDROID_NDK_ROOT=$"(android_ndk_root) )
@@ -269,7 +269,12 @@ routine build( target:String )
 
   endForEach
 
-  sync_products
+  # Copy .gdextension to Build/
+  block files = Files( "Source", "*.gdextension" )
+    files.sync_to( File("Build"), &verbose, &keep_unused )
+  endBlock
+
+  if (not skip_sync) sync_products
 endRoutine
 
 routine patch_js_build
@@ -280,7 +285,7 @@ routine patch_js_build
   local content = String( file )
   if (content.contains(''#return "EM_CONFIG"'')) return
 
-  header "Patching $ to fix Javascript build"(file)
+  banner "Patching $ to fix Javascript build"(file)
   local lines = content.split( '\n' )
   local tab = ""
   local rewriter = lines.rewriter
@@ -402,40 +407,47 @@ endRoutine
 
 routine rogo_sync( project_filepath:String )
   # Syncs the specified project to be automatically kept up-to-date with this GDExtension's build products.
-  # Multiple projects can be synced. Run 'rogo unsync <project_filepath>' to stop updating a project with new builds products.
+  # Multiple projects can be synced. Run 'rogo unsync <project_filepath>' to stop updating a project with new build products.
   if (not String.exists(project_filepath))
     sync_products
     return
   endIf
 
   project_filepath = File( project_filepath ).abs
+  if (project_filepath.ends_with("/project.godot"))
+    project_filepath = File(project_filepath).folder
+  endIf
 
-  local outputs = String[]
-  local file =  File("LinkedProjects.txt")
-  if (file.exists) outputs = String( file ).trimmed.split( '\n' )
-  if (not outputs.contains(project_filepath))
+  local synched_projects = String[]
+  local file =  File("SynchedProjects.rogo")
+  if (file.exists) synched_projects = String( file ).trimmed.split( '\n' )
+  if (not synched_projects.contains(project_filepath))
     if (File(project_filepath).exists and File(project_filepath/"project.godot").exists)
-      outputs.add( project_filepath )
+      synched_projects.add( project_filepath )
     elseIf (File(project_filepath).exists)
-      println "[ERROR] $ does not contain a project.godot file - skipping."(project_filepath)
+      error.println "[ERROR] $ does not contain a project.godot file - skipping."(project_filepath)
+      return
     else
-      println "[ERROR] Filepath '$' does not exist - skipping."(project_filepath)
+      error.println "[ERROR] Filepath '$' does not exist - skipping."(project_filepath)
+      return
     endIf
   endIf
-  file.save( outputs.join('\n') + "\n" )
+  banner "Now synching build products to " + project_filepath
+  file.save( synched_projects.join('\n') + "\n" )
 
-  rogo_sync( null )
+  sync_products
 endRoutine
 
 routine rogo_unsync( project_filepath:String )
   # Stops updating the specified Godot project with updated builds of this extension.
   project_filepath = File( project_filepath ).abs
 
-  local outputs = String[]
-  local file =  File("LinkedProjects.txt")
-  if (file.exists) outputs = String( file ).trimmed.split( '\n' )
-  outputs.remove( project_filepath )
-  file.save( outputs.join('\n') )
+  local synched_projects = String[]
+  local file =  File("SynchedProjects.rogo")
+  if (file.exists) synched_projects = String( file ).trimmed.split( '\n' )
+  synched_projects.remove( project_filepath )
+  banner "Build products are no longer synched to " + project_filepath
+  file.save( synched_projects.join('\n') )
 endRoutine
 
 routine rogo_create( class_name:String, extends:String, base_class_name:String )
@@ -464,42 +476,53 @@ routine rogo_create( class_name:String, extends:String, base_class_name:String )
   CreateClass( class_name, base_class_name )
 endRoutine
 
-routine sync_products->Logical
+routine sync_products
   # Copy build products to synched output projects.
-  local files = Files( "Source", "*.gdextension" )
-  local header_shown = false
-  if (files.sync_to(File("Build"), &keep_unused, &dry_run))
-    header "Synchronizing build products to linked projects"
-    files.sync_to( File("Build"), &verbose, &keep_unused )
-    header_shown = true
-  endIf
+  local needs_header = true
+  local message = "Synchronizing build products to linked projects"
 
-  local outputs = String[]
-  local file =  File("LinkedProjects.txt")
-  if (file.exists) outputs = String( file ).trimmed.split( '\n' )
-  forEach (filepath in outputs)
-    if (File(filepath).exists)
-      local bin = File( filepath/"bin"  )
-      bin.create_folder
-      local products = Files( "Build" )
-      products.add( "*.gdextension" )
-      products.add( "*.dll" )
-      products.add( "*.dylib" )
-      products.add( "*.framework/**" )
-      products.add( "*.so" )
-      products.add( "*.wasm" )
-      if (products.sync_to(bin,&dry_run,&keep_unused))
-        if (not header_shown)
-          header "Synchronizing build products to linked projects"
-          header_shown = true
-        endIf
-        products.sync_to( bin, &verbose, &keep_unused )
-      endIf
+  local synched_projects = String[]
+  local file =  File("SynchedProjects.rogo")
+  if (file.exists) synched_projects = String( file ).trimmed.split( '\n' )
+
+  forEach (project_filepath in synched_projects)
+    if (rogo_copy_products( project_filepath, &=needs_header ))
+      needs_header = false
     endIf
   endForEach
 
-  if (not header_shown) header "Linked projects are up to date"
-  return header_shown
+  if (needs_header)
+    banner "All synchronized projects are up to date."
+  endIf
+endRoutine
+
+routine rogo_copy_products( project_filepath:String, &needs_header, w=Console.width:Int32 )->Logical
+  # Copy build products to a specific project folder.
+  local message = "Synchronizing build products to linked projects"
+  local synched_any = false
+
+  local project_folder = File( project_filepath )
+  if (not project_folder.exists) return false
+
+  local bin = project_folder/"bin"
+  bin.create_folder
+  local products = Files( "Build" )
+  products.add( "*.gdextension" )
+  products.add( "*.dll" )
+  products.add( "*.dylib" )
+  products.add( "*.framework/**" )
+  products.add( "*.so" )
+  products.add( "*.wasm" )
+  if (products.sync_to(bin,&dry_run,&keep_unused))
+    if (needs_header)
+      banner( message, w )
+      needs_header = false
+      synched_any = true
+    endIf
+    products.sync_to( bin, &verbose, &keep_unused )
+  endIf
+
+  return synched_any
 endRoutine
 
 routine rogo_run
@@ -537,20 +560,21 @@ endRoutine
 
 routine deps( &check_for_update )
   if (not File("godot-cpp").exists)
-    header "Cloning godot-cpp repo"
+    banner "Cloning godot-cpp repo"
     execute "git clone -b $ https://github.com/godotengine/godot-cpp.git"(Build.GODOT_CPP_BRANCH)
   elseIf (check_for_update)
-    header "Updating godot-cpp repo"
+    banner "Updating godot-cpp repo"
     execute "(cd godot-cpp && git pull)"
     execute "(cd godot-cpp && scons)"
   endIf
 
   local patcher = GitIgnorePatcher( ".gitignore" )
+
   patch_gitignore( patcher )
 
   if (patcher.is_modified)
-    if (patcher.file.exists) header "Updating .gitignore"
-    else                     header "Creating .gitignore"
+    if (patcher.file.exists) banner "Updating .gitignore"
+    else                     banner "Creating .gitignore"
     patcher.print_new_entries
     patcher.save
   endIf
@@ -563,7 +587,7 @@ routine patch_gitignore( patcher:GitIgnorePatcher )
   patcher.add( "# Rogo", ".rogo" )
   patcher.add( "# Rogo", "/Build" )
   patcher.add( "# Rogo", "BuildLocal.rogue" )
-  patcher.add( "# Rogo", "/LinkedProjects.txt" )
+  patcher.add( "# Rogo", "/SynchedProjects.rogo" )
   patcher.add( "# Rogo", "Local.rogo" )
 
   patcher.add( "# SCons", ".sconsign.dblite" )
@@ -813,12 +837,12 @@ class CreateExtension
          |windows.x86_64.release    = "res://bin/lib<LIBNAME>.windows.template_release.x86_64.dll"
       save( extension, File("Source/$.gdextension"(libname)) )
 
-      header "Extension '$' created."(libname)
+      banner "Extension '$' created."(libname)
       println
 
       rogo_default
 
-      header "Finished! Run 'rogo help' to list available build commands."
+      banner "Finished! Run 'rogo help' to list available build commands."
 
     method save( source:String, file:File )
       if (file.exists) return
@@ -840,7 +864,7 @@ class CreateClass
 
       name_uc = name.to_uppercase
 
-      header "Creating native class $ extends $"(name,base_class_name)
+      banner "Creating native class $ extends $"(name,base_class_name)
 
       base_class_header = find_header( base_class_name, &as_header)
 
@@ -983,8 +1007,8 @@ class CreateClass
 
 endClass
 
-routine header( content:String )
-  local n = Console.width.or_smaller(100)
+routine banner( content:String, w=Console.width:Int32 )
+  local n = w.or_smaller(100)
   content .= word_wrapped( n-2 )
 
   println "┌$┐" ("─"*(n-2))

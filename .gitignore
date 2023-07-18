@@ -8,6 +8,7 @@
 BuildLocal.rogue
 /LinkedProjects.txt
 Local.rogo
+/SynchedProjects.rogo
 
 # SCons
 .sconsign.dblite
@@ -18,12 +19,10 @@ Local.rogo
 # Vim
 *.swo
 *.swp
+*~
 
 # Plasmacore
 /Source/Generated
 
 # Mac
 .DS_Store
-
-# Vim
-*~
