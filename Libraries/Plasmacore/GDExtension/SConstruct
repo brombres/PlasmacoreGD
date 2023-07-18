@@ -22,8 +22,6 @@ sources = Glob("Source/*.cpp")
 
 if env["platform"] == "macos":
   add_sources(sources, "Source/Generated", "mm")
-else:
-  add_sources(sources, "Source/Generated", "cpp")
 
   # Example - uncomment and adjust as desired
   #env.Append(

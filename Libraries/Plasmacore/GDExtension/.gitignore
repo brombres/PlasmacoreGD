@@ -11,6 +11,7 @@
 BuildLocal.rogue
 /LinkedProjects.txt
 Local.rogo
+/SynchedProjects.rogo
 
 # SCons
 .sconsign.dblite

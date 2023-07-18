@@ -26,7 +26,7 @@ endRoutine
 
 routine rogo_build
   rogo_build_rogue
-  if (not execute("(cd Extensions/Plasmacore && rogo build)",&suppress_error))
+  if (not execute("(cd Libraries/Plasmacore/GDExtension && rogo build)",&suppress_error))
     System.exit(1)  # avoid a double failure message from the nested Rogo builds
   endIf
 endRoutine
@@ -49,9 +49,9 @@ routine rogo_compile_rogue( platform="":String )
     platform = System.os
   endIf
 
-  local output = File( "Extensions/Plasmacore/Source/Generated" )
+  local output = File( "Libraries/Plasmacore/GDExtension/Source/Generated" )
   output.create_folder
-  local cmd = "roguec Source/Main Plasmacore --libraries=Libraries/Plasmacore/Libraries/Rogue --gc=manual --gc-threshold=4MB --output=$/RogueProgram"(output)
+  local cmd = "roguec Source/Main Plasmacore --libraries=Libraries/Plasmacore/Rogue --gc=manual --gc-threshold=4MB --output=$/RogueProgram"(output)
   cmd .= appending( "--target=$,Plasmacore,C++"(platform) )
   if (platform == "macOS" or platform == "iOS") cmd += ",ObjC"
   execute cmd
@@ -205,7 +205,7 @@ endRoutine
 
 routine copy( filename:String, project_path:String, &needs_header )->Logical
   local message = "Synchronizing build products to linked projects"
-  local src = File("Libraries/Plasmacore/Libraries/Godot/Plasmacore"/filename)
+  local src = File("Libraries/Plasmacore/Godot"/filename)
   local dest = File(project_path/filename)
   local copied_any = false
 
@@ -241,7 +241,7 @@ routine copy( filename:String, project_path:String, &needs_header )->Logical
 endRoutine
 
 routine subrogo( args="":String )->String
-  local cmd = "cd Extensions/Plasmacore && rogo".appending(args)
+  local cmd = "cd Libraries/Plasmacore/GDExtension && rogo".appending(args)
   local result = Process.run( cmd, &env )
   local output = result->String
   if (not result.success)
