@@ -1,3 +1,4 @@
 module Plasmacore
 
 $include Plasmacore/Log
+$include Plasmacore/Log

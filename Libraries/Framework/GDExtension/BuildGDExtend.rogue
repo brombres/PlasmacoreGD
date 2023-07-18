@@ -2,7 +2,6 @@
 # to this folder and type "rogo" at the command line, or "rogo help" for a list
 # of supported commands.
 
-#$ DEPENDENCIES = BuildCore.rogue
 $requireRogue "2.24"
 
 uses Math/Best
