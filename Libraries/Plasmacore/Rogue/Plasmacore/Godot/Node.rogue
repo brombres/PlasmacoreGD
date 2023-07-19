@@ -1,38 +1,111 @@
 module Plasmacore
 
-NATIVE_POINTER_TYPE<<RogueNodePointer,"godot::Node*">>
+NATIVE_POINTER_TYPE<<NativeGDNode,"godot::Node*">>
 
-class Node( native_node:RogueNodePointer ) [compound]
-	METHODS
-		method class_name->String
-			local result : String
-			native @|$result = RogueString_create( $native_node.value->get_class().utf8().get_data() );
-			return result
+class Node( gd_node:NativeGDNode, type:NodeType ) [compound]
+  GLOBAL METHODS
+    method create( gd_node:NativeGDNode )->Node
+      if (not gd_node.exists) return Node( gd_node, NodeType )
 
-		method count->Int32
-			local result : Int32
-			native @|$result = $native_node.value->get_child_count();
-			return result
+      local type = NodeType
+      if (instance_of<<Sprite3D>>(gd_node)) type = NodeTypeSprite3D
+      if (instance_of<<Node3D>>(gd_node))   type = NodeTypeNode3D
 
-		method filepath->String
-			local result : String
-			native @|$result = RogueString_create( $native_node.value->get_scene_file_path().utf8().get_data() );
-			return result
+      return Node( gd_node, type )
 
-		method get( index:Int32 )->Node
-			local child : RogueNodePointer
-			native @|$child = (RogueNodePointer){ $native_node.value->get_child( $index ) };
-			return Node( child )
+    method instance_of<<$GodotType>>( gd_node:NativeGDNode )->Logical
+      local result : Logical
+      native @|$result = !!godot::Object::cast_to<godot::$GodotType>( $gd_node.value );
+      return result
 
-		method last->Node
-			return this[ count-1 ]
+  METHODS
+    method class_name->String
+      return type.class_name( gd_node )
 
-		method name->String
-			local result : String
-			native @|$result = RogueString_create( ((godot::String)$native_node.value->get_name()).utf8().get_data() );
-			return result
+    method count->Int32
+      return type.count( gd_node )
 
-		method to->String
-			return name
+    method filepath->String
+      return type.filepath( gd_node )
 
+    method get( index:Int32 )->Node
+      return type.get( gd_node, index )
+
+    method get( node_path:String )->Node
+      return type.get( gd_node, node_path )
+
+    method instance_of<<$GodotType>>->Logical
+      local result : Logical
+      native @|$result = !!godot::Object::cast_to<godot::$GodotType>( $gd_node.value );
+      return result
+
+    method last->Node
+      return this[ count-1 ]
+
+    method name->String
+      return type.name( gd_node )
+
+    method operator?->Logical
+      return gd_node.exists
+
+    method set_visible( setting:Logical )
+      type.set_visible( gd_node, setting )
+
+    method to->String
+      return type->String( gd_node )
+
+endClass
+
+class NodeType [singleton]
+  METHODS
+    method class_name( gd_node:NativeGDNode )->String
+      local result : String
+      native @|$result = RogueString_create( $gd_node.value->get_class().utf8().get_data() );
+      return result
+
+    method count( gd_node:NativeGDNode )->Int32
+      local result : Int32
+      native @|$result = $gd_node.value->get_child_count();
+      return result
+
+    method filepath( gd_node:NativeGDNode )->String
+      local result : String
+      native @|$result = RogueString_create( $gd_node.value->get_scene_file_path().utf8().get_data() );
+      return result
+
+    method get( gd_node:NativeGDNode, index:Int32 )->Node
+      local child : NativeGDNode
+      native @|$child = (NativeGDNode){ $gd_node.value->get_child( $index ) };
+      return Node( child )
+
+    method get( gd_node:NativeGDNode, node_path:String )->Node
+      local result : NativeGDNode
+      if (gd_node.exists)
+        native @|godot::NodePath path( $node_path->data->as_utf8 );
+                |$result = (NativeGDNode){ $gd_node.value->get_node_or_null( path ) };
+      endIf
+      return Node( result )
+
+    method name( gd_node:NativeGDNode )->String
+      local result : String
+      native @|$result = RogueString_create( ((godot::String)$gd_node.value->get_name()).utf8().get_data() );
+      return result
+
+    method set_visible( gd_node:NativeGDNode, setting:Logical )
+      noAction
+
+    method to->String( gd_node:NativeGDNode )
+      return name( gd_node )
+
+endClass
+
+class NodeTypeNode3D : NodeType [singleton]
+  METHODS
+    method set_visible( gd_node:NativeGDNode, setting:Logical )
+      native
+        @|godot::Object::cast_to<godot::Node3D>( $gd_node.value )->set_visible( $setting );
+      noAction
+endClass
+
+class NodeTypeSprite3D : NodeTypeNode3D [singleton]
 endClass

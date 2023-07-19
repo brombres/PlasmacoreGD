@@ -1,21 +1,34 @@
 module Plasmacore
 
 $include Plasmacore/Godot
+$include Plasmacore/Visual
 
 class Plasmacore [essential api singleton]
-	PROPERTIES
-		root : Node
+  PROPERTIES
+    gd_root    : Node
+    gd_scene   : Node
+    gd_assets  : Node
+    gd_visuals : Node
 
-	METHODS
-		method init
-			Global.output = Log
-			Global.error = ErrorLog
+    visuals_list   = Visual[]
+    visuals_lookup = [String:Visual]
 
-		method on_new_scene( root_pointer:RogueNodePointer )
-			println "Rogue new scene!"
-			root = Node( root_pointer )
-			println  root
-			forEach (child in root)
-				println "$:$ $"(child,child.class_name,child.filepath)
-			endForEach
+  METHODS
+    method init
+      Global.output = Log
+      Global.error = ErrorLog
+
+    method on_new_scene( native_root:NativeGDNode )
+      gd_root   = Node( native_root )
+      gd_scene  = gd_root.last
+      gd_assets = gd_scene//Assets
+      if (gd_assets) gd_visuals = gd_assets//Visuals
+
+      visuals_list.clear
+      visuals_lookup.clear
+
+      println "Plasmacore new scene!"
+      Visual( "MacrossLogo" )
+
+    method on_update
 endClass

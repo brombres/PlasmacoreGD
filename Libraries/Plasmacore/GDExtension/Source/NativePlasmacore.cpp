@@ -23,7 +23,7 @@ void NativePlasmacore::launch()
 void NativePlasmacore::on_new_scene( Node* root )
 {
   if (Engine::get_singleton()->is_editor_hint()) return;
-	PlasmacorePlasmacore__on_new_scene__RogueNodePointer( ROGUE_SINGLETON(PlasmacorePlasmacore), (RogueNodePointer){root} );
+	PlasmacorePlasmacore__on_new_scene__NativeGDNode( ROGUE_SINGLETON(PlasmacorePlasmacore), (NativeGDNode){root} );
 }
 
 void NativePlasmacore::on_update()

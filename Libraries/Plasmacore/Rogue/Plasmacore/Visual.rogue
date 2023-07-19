@@ -1,0 +1,36 @@
+module Plasmacore
+
+class Visual
+  GLOBAL METHODS
+    method create( name:String )->Visual
+      local existing = Plasmacore.visuals_lookup.find( name )
+      if (existing) return existing.value
+
+      local node : Node
+
+      contingent
+        if (Plasmacore.gd_visuals) node = Plasmacore.gd_visuals[name]
+        sufficient (node)
+
+        if (Plasmacore.gd_assets) node = Plasmacore.gd_assets[name]
+        sufficient (node)
+
+        node = Plasmacore.gd_scene[name]
+      endContingent
+
+      local result = Visual( node )
+      Plasmacore.visuals_list.add( result )
+      Plasmacore.visuals_lookup[ name ] = result
+      return result
+
+  PROPERTIES
+    node : Node
+
+  METHODS
+    method init( node )
+      #node.visible = true
+      Plasmacore.gd_assets.visible = true
+endClass
+
+class VisualSprite3D : Visual
+endClass

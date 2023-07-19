@@ -25,6 +25,8 @@ class NativePlasmacore : public RefCounted
 		static void _bind_methods();
 
 	public:
+		// PROPERTIES
+
 		// CONSTRUCTOR METHODS
 		NativePlasmacore();
 		~NativePlasmacore();

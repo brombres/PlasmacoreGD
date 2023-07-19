@@ -162,15 +162,18 @@ routine rogo_copy_products( project_filepath:String, &needs_header )->Logical
     needs_header = false
   endIf
 
-  if (copy("Plasmacore.gd", project_folder, &=needs_header))
-    needs_header = false
-    synched_any = true
-  endIf
+	local products =
+	[
+	  "Plasmacore.gd"
+		"PlasmacoreScene2DX.gd"
+	]
 
-  if (copy("PlasmacoreConfig.gd", project_folder, &=needs_header))
-    needs_header = false
-    synched_any = true
-  endIf
+	forEach (product in products)
+		if (copy(product, project_folder, &=needs_header))
+			needs_header = false
+			synched_any = true
+		endIf
+	endForEach
 
   return synched_any
 endRoutine
