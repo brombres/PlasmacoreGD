@@ -1,0 +1,45 @@
+module Plasmacore
+
+class Drawable
+  GLOBAL METHODS
+    method create( name:String )->Drawable
+      local existing = Plasmacore.drawables_lookup.find( name )
+      if (existing) return existing.value
+
+      local node : Node
+
+      contingent
+        if (Plasmacore.gd_drawables) node = Plasmacore.gd_drawables[name]
+        sufficient (node)
+
+        if (Plasmacore.gd_assets) node = Plasmacore.gd_assets[name]
+        sufficient (node)
+
+        node = Plasmacore.gd_scene[name]
+      endContingent
+
+      local drawable : Drawable
+      if (node.type instanceOf NodeTypeSprite3D)
+        drawable = DrawableSprite3D( node )
+      else
+        drawable = Drawable( node )
+      endIf
+
+      Plasmacore.drawables_list.add( drawable )
+      Plasmacore.drawables_lookup[ name ] = drawable
+      return drawable
+
+  PROPERTIES
+    node : Node
+
+  METHODS
+    method init( node )
+      #node.visible = true
+      Plasmacore.gd_assets.visible = true
+endClass
+
+class DrawableNode3D : Drawable
+endClass
+
+class DrawableSprite3D : DrawableNode3D
+endClass

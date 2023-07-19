@@ -1,17 +1,17 @@
 module Plasmacore
 
 $include Plasmacore/Godot
-$include Plasmacore/Visual
+$include Plasmacore/Drawable
 
 class Plasmacore [essential api singleton]
   PROPERTIES
-    gd_root    : Node
-    gd_scene   : Node
-    gd_assets  : Node
-    gd_visuals : Node
+    gd_root      : Node
+    gd_scene     : Node
+    gd_assets    : Node
+    gd_drawables : Node
 
-    visuals_list   = Visual[]
-    visuals_lookup = [String:Visual]
+    drawables_list   = Drawable[]
+    drawables_lookup = [String:Drawable]
 
   METHODS
     method init
@@ -22,13 +22,13 @@ class Plasmacore [essential api singleton]
       gd_root   = Node( native_root )
       gd_scene  = gd_root.last
       gd_assets = gd_scene//Assets
-      if (gd_assets) gd_visuals = gd_assets//Visuals
+      if (gd_assets) gd_drawables = gd_assets//Drawables
 
-      visuals_list.clear
-      visuals_lookup.clear
+      drawables_list.clear
+      drawables_lookup.clear
 
       println "Plasmacore new scene!"
-      Visual( "MacrossLogo" )
+      Drawable( "MacrossLogo" )
 
     method on_update
 endClass
