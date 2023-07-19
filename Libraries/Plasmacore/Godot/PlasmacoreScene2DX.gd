@@ -8,6 +8,9 @@ extends Node3D
 ## while larger nominal_z values reduce the apparent depth of the 3D effect.
 @export var nominal_z:float = 2000
 
+# The far clipping plane. Note that the near clipping plane is fixed at 1.
+var z_far = 4000
+
 func _ready():
 	var assets = $Assets
 	if assets: assets.visible = false
@@ -16,5 +19,15 @@ func _ready():
 		camera = Camera3D.new()
 		add_child( camera )
 
-	Plasmacore.on_new_scene()
+	get_viewport().connect( "size_changed", _on_viewport_size_changed )
+	_on_viewport_size_changed()
+
+	Plasmacore.on_new_scene_2dx( nominal_z )
+
+func _on_viewport_size_changed():
+	var display_size = get_viewport().get_visible_rect().size
+
+	var k = (nominal_z + 1)
+	var size = display_size.y / k
+	camera.set_frustum( size, Vector2(), 1, z_far )
 

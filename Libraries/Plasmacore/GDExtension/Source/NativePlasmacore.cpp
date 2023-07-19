@@ -20,17 +20,22 @@ void NativePlasmacore::launch()
   }
 }
 
-void NativePlasmacore::on_new_scene( Node* root )
+void NativePlasmacore::on_new_scene_2dx( Node* root, float nominal_z )
 {
   if (Engine::get_singleton()->is_editor_hint()) return;
-	PlasmacorePlasmacore__on_new_scene__NativeGDNode( ROGUE_SINGLETON(PlasmacorePlasmacore), (NativeGDNode){root} );
+	PlasmacorePlasmacore__on_new_scene_2dx__NativeGDNode_RogueReal64(
+      ROGUE_SINGLETON(PlasmacorePlasmacore),
+      (NativeGDNode){root},
+      nominal_z
+  );
 }
 
-void NativePlasmacore::on_update( float dt )
+void NativePlasmacore::on_update( float dt, Vector2 display_size )
 {
   if ( !Engine::get_singleton()->is_editor_hint() )
   {
-    PlasmacorePlasmacore__on_update__RogueReal64( ROGUE_SINGLETON(PlasmacorePlasmacore), dt );
+    GeometryXY size = (GeometryXY){ (RogueInt32)display_size.x, (RogueInt32)display_size.y };
+    PlasmacorePlasmacore__on_update__RogueReal64_GeometryXY( ROGUE_SINGLETON(PlasmacorePlasmacore), dt, size );
     Rogue_check_gc();
   }
 }
@@ -54,8 +59,8 @@ void NativePlasmacore::on_update( float dt )
 void NativePlasmacore::_bind_methods()
 {
 	ClassDB::bind_method( D_METHOD("launch" ),    &NativePlasmacore::launch );
-	ClassDB::bind_method( D_METHOD("on_new_scene", "root" ), &NativePlasmacore::on_new_scene );
-	ClassDB::bind_method( D_METHOD("on_update", "dt" ), &NativePlasmacore::on_update );
+	ClassDB::bind_method( D_METHOD("on_new_scene_2dx", "root", "nominal_z" ), &NativePlasmacore::on_new_scene_2dx );
+	ClassDB::bind_method( D_METHOD("on_update", "dt", "display_size" ), &NativePlasmacore::on_update );
 	//ClassDB::bind_method( D_METHOD("get_material" ),				 &NativePlasmacore::get_material );
 	//ClassDB::bind_method( D_METHOD("get_camera" ),					 &NativePlasmacore::get_camera );
 	//ClassDB::bind_method( D_METHOD("get_position" ),				 &NativePlasmacore::get_position );

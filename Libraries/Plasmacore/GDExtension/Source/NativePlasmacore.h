@@ -32,8 +32,8 @@ class NativePlasmacore : public RefCounted
 		~NativePlasmacore();
 
     void launch();
-		void on_new_scene( Node* root );
-    void on_update( float dt );
+		void on_new_scene_2dx( Node* root, float nominal_z );
+    void on_update( float dt, Vector2 display_size );
 
     //void _ready() override
     //{

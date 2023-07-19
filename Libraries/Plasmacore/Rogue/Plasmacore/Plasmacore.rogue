@@ -8,13 +8,16 @@ $include Plasmacore/Drawable
 
 class Plasmacore [essential api singleton]
   PROPERTIES
-    gd_root      : Node
-    gd_scene     : Node
-    gd_assets    : Node
-    gd_drawables : Node
+    gd_root      : GDNode
+    gd_scene     : GDNode
+    gd_assets    : GDNode
+    gd_drawables : GDNode
 
     drawables_list   = Drawable[]
     drawables_lookup = [String:Drawable]
+
+    display_size : XY
+    nominal_z    : Real64
 
     #update_interval         = 1.0/60.0
     #update_progress_1000ths : Int32
@@ -36,8 +39,10 @@ class Plasmacore [essential api singleton]
 
       (forEach in drawables_list).on_finished_drawing
 
-    method on_new_scene( native_root:NativeGDNode )
-      gd_root   = Node( native_root )
+    method on_new_scene_2dx( native_root:NativeGDNode, nominal_z )
+      nominal_z = -nominal_z.abs # ensure negative
+
+      gd_root   = GDNode( native_root )
       gd_scene  = gd_root.last
       gd_assets = gd_scene//Assets
       if (gd_assets) gd_drawables = gd_assets//Drawables
@@ -48,25 +53,8 @@ class Plasmacore [essential api singleton]
       println "Plasmacore new scene!"
       drawable = Drawable( "MacrossLogo" )
 
-    method on_update( dt:Real64 )
-      #{
-      local delta_1000ths = ((dt / update_interval) * 1000 + 0.5)->Int32
-      local best_scale = Best<<Int32,Real64>>( ($1 - 1.0).abs < ($2 - 1.0) )
-      best_scale.consider( 10, (delta_1000ths - 10).abs )
-      best_scale.consider( 100, (delta_1000ths - 100).abs )
-      best_scale.consider( 1000, (delta_1000ths - 1000).abs )
-      # percentage of required update interval rounded to the nearest 10 percent of the value
-
-      update_progress_1000ths += delta_1000ths
-      while (needs_update or update_progress_1000ths >= 100)
-        update
-        needs_update = false
-        update_progress_1000ths -= 100
-      endWhile
-
-      draw
-      }#
-
-      if (drawable) angle += Degrees(30*dt)->Radians
+    method on_update( dt:Real64, display_size )
+      #trace display_size
+      #if (drawable) angle += Degrees(30*dt)->Radians
       draw
 endClass

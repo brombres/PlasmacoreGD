@@ -2,21 +2,21 @@ module Plasmacore
 
 NATIVE_POINTER_TYPE<<NativeGDNode,"godot::Node*">>
 
-class Node( gd_node:NativeGDNode, type:NodeType ) [compound]
+class GDNode( gd_node:NativeGDNode, type:GDNodeType ) [compound]
   GLOBAL METHODS
-    method create( gd_node:NativeGDNode )->Node
-      if (not gd_node.exists) return Node( gd_node, NodeType )
+    method create( gd_node:NativeGDNode )->GDNode
+      if (not gd_node.exists) return GDNode( gd_node, GDNodeType )
 
-      local type = NodeType
-      if (instance_of<<Sprite3D>>(gd_node)) type = NodeTypeSprite3D
-      if (instance_of<<Node3D>>(gd_node))   type = NodeTypeNode3D
+      local type = GDNodeType
+      if (instance_of<<Sprite3D>>(gd_node))   type = GDNodeTypeSprite3D
+      elseIf (instance_of<<Node3D>>(gd_node)) type = GDNodeTypeNode3D
 
-      return Node( gd_node, type )
+      return GDNode( gd_node, type )
 
-    method create<<$ClassName>>->Node
+    method create<<$ClassName>>->GDNode
       local gd_node : NativeGDNode
       native @|$gd_node = memnew($ClassName)
-      return Node( gd_node )
+      return GDNode( gd_node )
 
     method instance_of<<$GodotType>>( gd_node:NativeGDNode )->Logical
       local result : Logical
@@ -24,14 +24,14 @@ class Node( gd_node:NativeGDNode, type:NodeType ) [compound]
       return result
 
   METHODS
-    method cloned->Node
+    method cloned->GDNode
       if (not gd_node.exists) return this
 
       local result : NativeGDNode
       native @|$result = (NativeGDNode){ $gd_node.value->duplicate() };
-      return Node( result, type )
+      return GDNode( result, type )
 
-    method add( child:Node )
+    method add( child:GDNode )
       native @|$gd_node.value->add_child( $child.gd_node.value );
 
     method class_name->String
@@ -49,25 +49,25 @@ class Node( gd_node:NativeGDNode, type:NodeType ) [compound]
       native @|$result = RogueString_create( $gd_node.value->get_scene_file_path().utf8().get_data() );
       return result
 
-    method get( index:Int32 )->Node
+    method get( index:Int32 )->GDNode
       local child : NativeGDNode
       native @|$child = (NativeGDNode){ $gd_node.value->get_child( $index ) };
-      return Node( child )
+      return GDNode( child )
 
-    method get( node_path:String )->Node
+    method get( node_path:String )->GDNode
       local result : NativeGDNode
       if (gd_node.exists)
         native @|godot::NodePath path( $node_path->data->as_utf8 );
                 |$result = (NativeGDNode){ $gd_node.value->get_node_or_null( path ) };
       endIf
-      return Node( result )
+      return GDNode( result )
 
     method instance_of<<$GodotType>>->Logical
       local result : Logical
       native @|$result = !!godot::Object::cast_to<godot::$GodotType>( $gd_node.value );
       return result
 
-    method last->Node
+    method last->GDNode
       return this[ count-1 ]
 
     method name->String
@@ -78,12 +78,20 @@ class Node( gd_node:NativeGDNode, type:NodeType ) [compound]
     method operator?->Logical
       return gd_node.exists
 
-    method remove( child:Node )
+    method remove( child:GDNode )
       native @|$gd_node.value->remove_child( $child.gd_node.value );
 
     method queue_free
       if (not gd_node.exists) return
       native @|$gd_node.value->queue_free() };
+
+    method set_name( new_name:String )
+      native @|String new_name( $new_name );
+              |$gd_node.value->set_name( new_name );
+
+    method set_pixel_scale( scale:Real64 )
+      trace
+      type.set_pixel_scale( gd_node, scale )
 
     method set_position( xy:RealXY )
       type.set_position( gd_node, xy )
@@ -97,20 +105,23 @@ class Node( gd_node:NativeGDNode, type:NodeType ) [compound]
     method set_scale( xy:RealXY )
       type.set_scale( gd_node, xy )
 
-    method set_name( new_name:String )
-      native @|String new_name( $new_name );
-              |$gd_node.value->set_name( new_name );
-
     method set_visible( setting:Logical )
       type.set_visible( gd_node, setting )
+
+    method texture->GDRef
+      return type.texture( gd_node )
 
     method to->String
       return type->String( gd_node )
 
 endClass
 
-class NodeType [singleton]
+class GDNodeType [singleton]
   METHODS
+    method set_pixel_scale( gd_node:NativeGDNode, scale:Real64 )
+      trace
+      noAction
+
     method set_position( gd_node:NativeGDNode, xy:RealXY )
       noAction
 
@@ -123,15 +134,18 @@ class NodeType [singleton]
     method set_visible( gd_node:NativeGDNode, setting:Logical )
       noAction
 
+    method texture( gd_node:NativeGDNode )->GDRef
+      return GDRef(NativeGDRef())
+
     method to->String( gd_node:NativeGDNode )
-      return Node( gd_node, this ).name
+      return GDNode( gd_node, this ).name
 
 endClass
 
-class NodeTypeNode3D : NodeType [singleton]
+class GDNodeTypeNode3D : GDNodeType [singleton]
   METHODS
     method set_position( gd_node:NativeGDNode, xy:RealXY )
-      local z = -2.0
+      local z = Plasmacore.nominal_z
       native
         @|godot::Vector3 position( (float)$xy.x, (float)$xy.y, (float)$z );
          |godot::Object::cast_to<godot::Node3D>( $gd_node.value )->set_position( position );
@@ -153,5 +167,15 @@ class NodeTypeNode3D : NodeType [singleton]
       noAction
 endClass
 
-class NodeTypeSprite3D : NodeTypeNode3D [singleton]
+class GDNodeTypeSprite3D : GDNodeTypeNode3D [singleton]
+  METHODS
+    method set_pixel_scale( gd_node:NativeGDNode, scale:Real64 )
+      trace
+      native @|godot::Object::cast_to<godot::Sprite3D>( $gd_node.value )->set_pixel_size( (float)$scale );
+
+    method texture( gd_node:NativeGDNode )->GDRef
+      local native_ref : NativeGDRef
+      native @|godot::Ref<godot::Texture2D> ref = godot::Object::cast_to<godot::Sprite3D>( $gd_node.value )->get_texture();
+      native @|$native_ref = (NativeGDRef){ ref.ptr() };
+      return GDRef( native_ref, GDRefTypeTexture2D )
 endClass

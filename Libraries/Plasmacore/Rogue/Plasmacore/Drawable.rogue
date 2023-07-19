@@ -6,7 +6,7 @@ class Drawable
       local existing = Plasmacore.drawables_lookup.find( name )
       if (existing) return existing.value
 
-      local node : Node
+      local node : GDNode
 
       contingent
         if (Plasmacore.gd_drawables) node = Plasmacore.gd_drawables[name]
@@ -19,7 +19,7 @@ class Drawable
       endContingent
 
       local drawable : Drawable
-      if (node.type instanceOf NodeTypeSprite3D)
+      if (node.type instanceOf GDNodeTypeSprite3D)
         drawable = DrawableSprite3D( node )
       else
         drawable = Drawable( node )
@@ -30,18 +30,17 @@ class Drawable
       return drawable
 
   PROPERTIES
-    template_node : Node
+    template_node : GDNode
 
-    hidden = Node[]
-    ready  = Node[]
-    drawn  = Node[]
+    hidden = GDNode[]
+    ready  = GDNode[]
+    drawn  = GDNode[]
 
   METHODS
     method init( template_node )
-      #node.visible = true
 
     method draw( position:RealXY, scale=RealXY(1,1):RealXY, rotation=Radians(0):Radians )
-      local node : Node
+      local node : GDNode
       if (ready.count)
         node = ready.remove_last
       elseIf (hidden.count)
@@ -67,4 +66,8 @@ class DrawableNode3D : Drawable
 endClass
 
 class DrawableSprite3D : DrawableNode3D
+  METHODS
+    method init( template_node:GDNode )
+      prior.init( template_node )
+      template_node.pixel_scale = 1.0
 endClass

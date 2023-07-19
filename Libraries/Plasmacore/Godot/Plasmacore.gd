@@ -6,7 +6,8 @@ func _ready():
 	plasmacore.launch()
 
 func _process(delta):
-	plasmacore.on_update(delta)
+	var display_size = get_viewport().get_visible_rect().size
+	plasmacore.on_update(delta,display_size)
 
-func on_new_scene():
-	plasmacore.on_new_scene( $/root )
+func on_new_scene_2dx( nominal_z:float ):
+	plasmacore.on_new_scene_2dx( $/root, nominal_z )

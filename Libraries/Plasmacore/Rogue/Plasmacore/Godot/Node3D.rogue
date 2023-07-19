@@ -1,9 +1,0 @@
-module Plasmacore
-
-#{
-NATIVE_POINTER_TYPE<<RogueNodePointer,"godot::Node3D*">>
-
-class Node3D : Node
-	METHODS
-endClass
-}#
