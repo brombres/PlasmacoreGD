@@ -1,5 +1,8 @@
 module Plasmacore
 
+uses Geometry [export]
+uses Math/Best
+
 $include Plasmacore/Godot
 $include Plasmacore/Drawable
 
@@ -13,10 +16,25 @@ class Plasmacore [essential api singleton]
     drawables_list   = Drawable[]
     drawables_lookup = [String:Drawable]
 
+    #update_interval         = 1.0/60.0
+    #update_progress_1000ths : Int32
+    #needs_update            = true
+
+    drawable : Drawable
+    angle = Radians(0)
+
   METHODS
     method init
       Global.output = Log
       Global.error = ErrorLog
+
+    method draw
+      if (drawable)
+        drawable.draw( RealXY(-1,0), 0.5, angle )
+        drawable.draw( RealXY( 1,0), 0.25 )
+      endIf
+
+      (forEach in drawables_list).on_finished_drawing
 
     method on_new_scene( native_root:NativeGDNode )
       gd_root   = Node( native_root )
@@ -28,7 +46,27 @@ class Plasmacore [essential api singleton]
       drawables_lookup.clear
 
       println "Plasmacore new scene!"
-      Drawable( "MacrossLogo" )
+      drawable = Drawable( "MacrossLogo" )
 
-    method on_update
+    method on_update( dt:Real64 )
+      #{
+      local delta_1000ths = ((dt / update_interval) * 1000 + 0.5)->Int32
+      local best_scale = Best<<Int32,Real64>>( ($1 - 1.0).abs < ($2 - 1.0) )
+      best_scale.consider( 10, (delta_1000ths - 10).abs )
+      best_scale.consider( 100, (delta_1000ths - 100).abs )
+      best_scale.consider( 1000, (delta_1000ths - 1000).abs )
+      # percentage of required update interval rounded to the nearest 10 percent of the value
+
+      update_progress_1000ths += delta_1000ths
+      while (needs_update or update_progress_1000ths >= 100)
+        update
+        needs_update = false
+        update_progress_1000ths -= 100
+      endWhile
+
+      draw
+      }#
+
+      if (drawable) angle += Degrees(30*dt)->Radians
+      draw
 endClass

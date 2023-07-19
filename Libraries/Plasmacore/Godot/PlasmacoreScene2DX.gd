@@ -17,3 +17,4 @@ func _ready():
 		add_child( camera )
 
 	Plasmacore.on_new_scene()
+

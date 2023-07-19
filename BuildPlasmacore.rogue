@@ -31,7 +31,12 @@ routine rogo_build
 endRoutine
 
 routine rogo_build_rogue
-  rogo_compile_rogue
+  local source = Files(".")
+  source.add( "Source/**/*.rogue" )
+  source.add( "Libraries/Plasmacore/Rogue/**/*.rogue" )
+  if (source.any_newer_than(File("Libraries/Plasmacore/GDExtension/Source/Generated/RogueProgram.h")))
+    rogo_compile_rogue
+  endIf
 endRoutine
 
 routine rogo_compile_rogue( platform="":String )
@@ -84,7 +89,7 @@ routine rogo_run
   endIf
 endRoutine
 
-routine rogo_sync( project_filepath:String )
+routine rogo_sync( project_filepath="":String )
   # Syncs the specified project to be automatically kept up-to-date with Plasmacore's build products.
   # Multiple projects can be synced. Run 'rogo unsync <project_filepath>' to stop updating a project with new build products.
   if (not String.exists(project_filepath))

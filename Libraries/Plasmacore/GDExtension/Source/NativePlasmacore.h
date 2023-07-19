@@ -33,7 +33,7 @@ class NativePlasmacore : public RefCounted
 
     void launch();
 		void on_new_scene( Node* root );
-    void on_update();
+    void on_update( float dt );
 
     //void _ready() override
     //{

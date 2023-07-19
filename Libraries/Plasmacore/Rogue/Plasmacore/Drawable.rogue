@@ -30,12 +30,37 @@ class Drawable
       return drawable
 
   PROPERTIES
-    node : Node
+    template_node : Node
+
+    hidden = Node[]
+    ready  = Node[]
+    drawn  = Node[]
 
   METHODS
-    method init( node )
+    method init( template_node )
       #node.visible = true
-      Plasmacore.gd_assets.visible = true
+
+    method draw( position:RealXY, scale=RealXY(1,1):RealXY, rotation=Radians(0):Radians )
+      local node : Node
+      if (ready.count)
+        node = ready.remove_last
+      elseIf (hidden.count)
+        node = hidden.remove_last
+        node.visible = true
+      else
+        node = template_node.cloned
+        Plasmacore.gd_scene.add( node )
+        node.visible = true
+      endIf
+      node.position = position
+      node.scale = scale
+      node.rotation = rotation.value
+      drawn.add( node )
+
+    method on_finished_drawing
+      loop (ready.count) hidden.add( ready.remove_last.[ visible=false ] )
+      loop (drawn.count) ready.add( drawn.remove_last )
+
 endClass
 
 class DrawableNode3D : Drawable
