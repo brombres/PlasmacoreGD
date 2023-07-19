@@ -172,6 +172,7 @@ routine rogo_copy_products( project_filepath:String, &needs_header )->Logical
 	  "Plasmacore.gd"
 		"Plasmacore2D.gd"
 		"Plasmacore2DX.gd"
+		"Plasmacore3D.gd"
 	]
 
 	forEach (product in products)
