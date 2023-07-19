@@ -23,7 +23,7 @@ func _ready():
 	get_viewport().connect( "size_changed", _on_viewport_size_changed )
 	_on_viewport_size_changed()
 
-	Plasmacore.on_new_scene_2dx( self )
+	Plasmacore.on_new_scene_2dx( 1, self )
 
 func _on_viewport_size_changed():
 	var display_size = get_viewport().get_visible_rect().size
@@ -32,6 +32,4 @@ func _on_viewport_size_changed():
 	var size = display_size.y / k
 	camera.set_frustum( size, Vector2(), 1, z_far )
 
-	set_position( Vector3(-display_size.x/2, display_size.y/2, -nominal_z) )
-	#set_position( Vector3(-display_size.x/2, display_size.y/2, 0) )
-	#set_position( Vector3(0, 0, -nominal_z) )
+	set_position( Vector3(-display_size.x/2, -display_size.y/2, -nominal_z) )

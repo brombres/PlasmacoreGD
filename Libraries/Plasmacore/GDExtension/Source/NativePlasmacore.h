@@ -32,34 +32,8 @@ class NativePlasmacore : public RefCounted
 		~NativePlasmacore();
 
     void launch();
-		void on_new_scene_2dx( Node* root, Node* config );
+		void on_new_scene( int mode, Node* root, Node* config );
     void on_update( float dt, Vector2 display_size );
-
-    //void _ready() override
-    //{
-    //  if ( !Engine::get_singleton()->is_editor_hint() )
-    //  {
-    //    Rogue_clean_up();
-    //    Rogue_launch();
-    //  }
-    //}
-
-		// PROPERTY ACCESS METHODS
-		//Ref<Material> get_material() { return material; }
-		//void					set_material( const Ref<Material> &p_material ) { material = p_material; }
-
-		//Camera3D* get_camera();
-		//void			set_camera( Camera3D* p_camera );
-
-		//Vector2 get_position() { return display_size; }
-		//void		set_position( Vector2 p_position ) { display_size = p_position; }
-
-		//float get_scale() { return scale; }
-		//void	set_scale( float p_scale ) { scale = p_scale; }
-
-		//// GENERAL METHODS
-		//int add_one( int parameter );
-
 };
 
 #endif // PLASMACORE_H

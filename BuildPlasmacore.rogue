@@ -170,6 +170,7 @@ routine rogo_copy_products( project_filepath:String, &needs_header )->Logical
 	local products =
 	[
 	  "Plasmacore.gd"
+		"Plasmacore2D.gd"
 		"Plasmacore2DX.gd"
 	]
 

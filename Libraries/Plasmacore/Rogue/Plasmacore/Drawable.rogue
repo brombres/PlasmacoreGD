@@ -39,7 +39,8 @@ class Drawable
     method init( template_node, subtree_index:Int32 )
       template_node.pixel_scale = 1.0  # only affects Sprite3D
 
-      subtree = GDNode.create<<Node3D>>
+      if (Plasmacore.is_2d) subtree = GDNode.create<<Node2D>>
+      else                  subtree = GDNode.create<<Node3D>>
       subtree.name = "Instances_$"(subtree_index)
       Plasmacore.gd_config.add( subtree )
 
@@ -51,14 +52,20 @@ class Drawable
         node = hidden.remove_last
         node.visible = true
       else
+        trace
         node = template_node.cloned
         subtree.add( node )
         node.visible = true
       endIf
-      node.position = position
-      #node.position = RealXY( position.x, Display.size.y - position.y )
+
+      if (Plasmacore.is_2dx)
+        node.position = RealXY( position.x, Display.size.y - position.y )
+      else
+        node.position = position
+      endIf
       node.scale = scale
       node.rotation = rotation.value
+
       drawn.add( node )
 
     method on_finished_drawing

@@ -54,15 +54,19 @@ class GDNode [compound]
       call<<Sprite3D,set_pixel_size>>( scale )
 
     method set_position( xy:XY )
+      call<<Node2D,set_position>>( xy->RealXY )
       call<<Node3D,set_position>>( XYZ(xy,0) )
 
     method set_rotation( radians:Radians )
+      call<<Node2D,set_rotation>>( radians.value )
       call<<Node3D,set_rotation>>( XYZ(0,0,radians.value) )
 
     method set_scale( scale:Real )
+      call<<Node2D,set_scale>>( RealXY(scale,scale) )
       call<<Node3D,set_scale>>( XYZ(scale,scale,scale) )
 
     method set_scale( scale:RealXY )
+      call<<Node2D,set_scale>>( scale )
       call<<Node3D,set_scale>>( XYZ(scale,1.0) )
 
     method set_visible( setting:Logical )
@@ -106,6 +110,18 @@ class GDNode [compound]
               |{
               |  godot::String arg( $arg->data->as_utf8 );
               |  $this.value->$method_name( arg );
+              |}
+
+    method call<<$GodotType,$method_name>>( xy:RealXY )
+      if (not this) return
+      native @|if ($this.value)
+              |{
+              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
+              |  if (node)
+              |  {
+              |    godot::Vector2 value( (float)$xy.x, (float)$xy.y );
+              |    node->$method_name( value );
+              |  }
               |}
 
     method call<<$GodotType,$method_name>>( xyz:XYZ )

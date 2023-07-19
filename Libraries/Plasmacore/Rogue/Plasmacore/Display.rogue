@@ -3,4 +3,8 @@ module Plasmacore
 class Display [singleton]
   PROPERTIES
     size      : XY
+
+  METHODS
+    method center->XY
+      return size / 2
 endClass
