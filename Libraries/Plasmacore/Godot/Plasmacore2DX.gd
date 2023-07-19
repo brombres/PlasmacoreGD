@@ -1,4 +1,4 @@
-class_name PlasmacoreScene2DX
+class_name Plasmacore2DX
 extends Node3D
 
 ## Optional Camera3D. If no camera is linked then Plasmacore will create a 3D camera at runtime.
@@ -17,12 +17,13 @@ func _ready():
 
 	if not camera:
 		camera = Camera3D.new()
-		add_child( camera )
+		get_tree().get_current_scene().add_child.call_deferred( camera )
+		camera.make_current()
 
 	get_viewport().connect( "size_changed", _on_viewport_size_changed )
 	_on_viewport_size_changed()
 
-	Plasmacore.on_new_scene_2dx( nominal_z )
+	Plasmacore.on_new_scene_2dx( self )
 
 func _on_viewport_size_changed():
 	var display_size = get_viewport().get_visible_rect().size
@@ -31,6 +32,6 @@ func _on_viewport_size_changed():
 	var size = display_size.y / k
 	camera.set_frustum( size, Vector2(), 1, z_far )
 
-	set_position( Vector3(-display_size.x/2, display_size.y/2, 0) )
-	#set_position( Vector3(-display_size.x/2, display_size.y/2, -nominal_z) )
+	set_position( Vector3(-display_size.x/2, display_size.y/2, -nominal_z) )
+	#set_position( Vector3(-display_size.x/2, display_size.y/2, 0) )
 	#set_position( Vector3(0, 0, -nominal_z) )

@@ -9,5 +9,5 @@ func _process(delta):
 	var display_size = get_viewport().get_visible_rect().size
 	plasmacore.on_update(delta,display_size)
 
-func on_new_scene_2dx( nominal_z:float ):
-	plasmacore.on_new_scene_2dx( $/root, nominal_z )
+func on_new_scene_2dx( config:Node3D ):
+	plasmacore.on_new_scene_2dx( $/root, config )

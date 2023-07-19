@@ -170,7 +170,7 @@ routine rogo_copy_products( project_filepath:String, &needs_header )->Logical
 	local products =
 	[
 	  "Plasmacore.gd"
-		"PlasmacoreScene2DX.gd"
+		"Plasmacore2DX.gd"
 	]
 
 	forEach (product in products)

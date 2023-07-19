@@ -3,6 +3,7 @@ module Plasmacore
 uses Geometry [export]
 uses Math/Best
 
+$include Plasmacore/Display
 $include Plasmacore/Godot
 $include Plasmacore/Drawable
 
@@ -10,18 +11,12 @@ class Plasmacore [essential api singleton]
   PROPERTIES
     gd_root      : GDNode
     gd_scene     : GDNode
+    gd_config    : GDNode
     gd_assets    : GDNode
     gd_drawables : GDNode
 
     drawables_list   = Drawable[]
     drawables_lookup = [String:Drawable]
-
-    display_size : XY
-    nominal_z    : Real64
-
-    #update_interval         = 1.0/60.0
-    #update_progress_1000ths : Int32
-    #needs_update            = true
 
     drawable : Drawable
     angle = Radians(0)
@@ -39,15 +34,14 @@ class Plasmacore [essential api singleton]
 
       (forEach in drawables_list).on_finished_drawing
 
-    method on_new_scene_2dx( gd_root, nominal_z )
-      nominal_z = -nominal_z.abs # ensure negative
-
+    method on_new_scene_2dx( gd_root, gd_config )
       gd_scene  = gd_root.last
-      gd_assets = gd_scene//Assets
+      gd_assets = gd_config//Assets
       if (gd_assets) gd_drawables = gd_assets//Drawables
 
       trace gd_root
       trace gd_scene
+      trace gd_config
       trace gd_assets
       trace gd_drawables
 
@@ -57,8 +51,9 @@ class Plasmacore [essential api singleton]
       println "Plasmacore new scene!"
       drawable = Drawable( "MacrossLogo" )
 
-    method on_update( dt:Real64, display_size )
-      #trace display_size
+    method on_update( dt:Real64, display_size:XY )
+      Display.size = display_size
+
       if (drawable) angle += Degrees(30*dt)->Radians
       draw
 endClass

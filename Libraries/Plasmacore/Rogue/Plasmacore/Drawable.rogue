@@ -15,16 +15,20 @@ class Drawable
         if (Plasmacore.gd_assets) node = Plasmacore.gd_assets[name]
         sufficient (node)
 
+        if (Plasmacore.gd_config) node = Plasmacore.gd_config[name]
+        sufficient (node)
+
         node = Plasmacore.gd_scene[name]
       endContingent
 
-      local drawable = Drawable( node )
+      local drawable = Drawable( node, Plasmacore.drawables_list.count )
       Plasmacore.drawables_list.add( drawable )
       Plasmacore.drawables_lookup[ name ] = drawable
 
       return drawable
 
   PROPERTIES
+    subtree       : GDNode
     template_node : GDNode
 
     hidden = GDNode[]
@@ -32,8 +36,12 @@ class Drawable
     drawn  = GDNode[]
 
   METHODS
-    method init( template_node )
+    method init( template_node, subtree_index:Int32 )
       template_node.pixel_scale = 1.0  # only affects Sprite3D
+
+      subtree = GDNode.create<<Node3D>>
+      subtree.name = "Instances_$"(subtree_index)
+      Plasmacore.gd_config.add( subtree )
 
     method draw( position:RealXY, scale=RealXY(1,1):RealXY, rotation=Radians(0):Radians )
       local node : GDNode
@@ -44,10 +52,11 @@ class Drawable
         node.visible = true
       else
         node = template_node.cloned
-        Plasmacore.gd_scene.add( node )
+        subtree.add( node )
         node.visible = true
       endIf
       node.position = position
+      #node.position = RealXY( position.x, Display.size.y - position.y )
       node.scale = scale
       node.rotation = rotation.value
       drawn.add( node )

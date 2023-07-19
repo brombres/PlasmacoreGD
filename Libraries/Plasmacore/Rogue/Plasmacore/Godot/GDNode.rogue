@@ -4,7 +4,7 @@ class GDNode [compound]
   GLOBAL METHODS
     method create<<$ClassName>>->GDNode
       local result : GDNode
-      native @|$result = (PlasmacoreGDNode){ memnew($ClassName) };
+      native @|$result = (PlasmacoreGDNode){ memnew(godot::$ClassName) };
       return result
 
     method operator?( obj:GDNode )->Logical
@@ -47,11 +47,14 @@ class GDNode [compound]
     method last->GDNode
       return this[ count-1 ]
 
+    method set_name( new_name:String )
+      call<<set_name>>( new_name )
+
     method set_pixel_scale( scale:Real )
       call<<Sprite3D,set_pixel_size>>( scale )
 
     method set_position( xy:XY )
-      call<<Node3D,set_position>>( XYZ(xy,Plasmacore.nominal_z) )
+      call<<Node3D,set_position>>( XYZ(xy,0) )
 
     method set_rotation( radians:Radians )
       call<<Node3D,set_rotation>>( XYZ(0,0,radians.value) )
@@ -96,6 +99,13 @@ class GDNode [compound]
               |{
               |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
               |  if (node) node->$method_name( (float)$value );
+              |}
+
+    method call<<$method_name>>( arg:String )
+      native @|if ($this.value)
+              |{
+              |  godot::String arg( $arg->data->as_utf8 );
+              |  $this.value->$method_name( arg );
               |}
 
     method call<<$GodotType,$method_name>>( xyz:XYZ )

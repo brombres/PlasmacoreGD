@@ -20,13 +20,13 @@ void NativePlasmacore::launch()
   }
 }
 
-void NativePlasmacore::on_new_scene_2dx( Node* root, float nominal_z )
+void NativePlasmacore::on_new_scene_2dx( Node* root, Node* config )
 {
   if (Engine::get_singleton()->is_editor_hint()) return;
-	PlasmacorePlasmacore__on_new_scene_2dx__PlasmacoreGDNode_RogueReal64(
+	PlasmacorePlasmacore__on_new_scene_2dx__PlasmacoreGDNode_PlasmacoreGDNode(
       ROGUE_SINGLETON(PlasmacorePlasmacore),
       (PlasmacoreGDNode){root},
-      nominal_z
+      (PlasmacoreGDNode){config}
   );
 }
 
@@ -59,7 +59,7 @@ void NativePlasmacore::on_update( float dt, Vector2 display_size )
 void NativePlasmacore::_bind_methods()
 {
 	ClassDB::bind_method( D_METHOD("launch" ),    &NativePlasmacore::launch );
-	ClassDB::bind_method( D_METHOD("on_new_scene_2dx", "root", "nominal_z" ), &NativePlasmacore::on_new_scene_2dx );
+	ClassDB::bind_method( D_METHOD("on_new_scene_2dx", "root", "config" ), &NativePlasmacore::on_new_scene_2dx );
 	ClassDB::bind_method( D_METHOD("on_update", "dt", "display_size" ), &NativePlasmacore::on_update );
 	//ClassDB::bind_method( D_METHOD("get_material" ),				 &NativePlasmacore::get_material );
 	//ClassDB::bind_method( D_METHOD("get_camera" ),					 &NativePlasmacore::get_camera );
