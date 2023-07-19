@@ -18,15 +18,10 @@ class Drawable
         node = Plasmacore.gd_scene[name]
       endContingent
 
-      local drawable : Drawable
-      if (node.type instanceOf GDNodeTypeSprite3D)
-        drawable = DrawableSprite3D( node )
-      else
-        drawable = Drawable( node )
-      endIf
-
+      local drawable = Drawable( node )
       Plasmacore.drawables_list.add( drawable )
       Plasmacore.drawables_lookup[ name ] = drawable
+
       return drawable
 
   PROPERTIES
@@ -38,6 +33,7 @@ class Drawable
 
   METHODS
     method init( template_node )
+      template_node.pixel_scale = 1.0  # only affects Sprite3D
 
     method draw( position:RealXY, scale=RealXY(1,1):RealXY, rotation=Radians(0):Radians )
       local node : GDNode
@@ -60,14 +56,4 @@ class Drawable
       loop (ready.count) hidden.add( ready.remove_last.[ visible=false ] )
       loop (drawn.count) ready.add( drawn.remove_last )
 
-endClass
-
-class DrawableNode3D : Drawable
-endClass
-
-class DrawableSprite3D : DrawableNode3D
-  METHODS
-    method init( template_node:GDNode )
-      prior.init( template_node )
-      template_node.pixel_scale = 1.0
 endClass

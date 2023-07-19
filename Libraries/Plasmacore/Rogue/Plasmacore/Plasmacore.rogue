@@ -39,13 +39,17 @@ class Plasmacore [essential api singleton]
 
       (forEach in drawables_list).on_finished_drawing
 
-    method on_new_scene_2dx( native_root:NativeGDNode, nominal_z )
+    method on_new_scene_2dx( gd_root, nominal_z )
       nominal_z = -nominal_z.abs # ensure negative
 
-      gd_root   = GDNode( native_root )
       gd_scene  = gd_root.last
       gd_assets = gd_scene//Assets
       if (gd_assets) gd_drawables = gd_assets//Drawables
+
+      trace gd_root
+      trace gd_scene
+      trace gd_assets
+      trace gd_drawables
 
       drawables_list.clear
       drawables_lookup.clear
@@ -55,6 +59,6 @@ class Plasmacore [essential api singleton]
 
     method on_update( dt:Real64, display_size )
       #trace display_size
-      #if (drawable) angle += Degrees(30*dt)->Radians
+      if (drawable) angle += Degrees(30*dt)->Radians
       draw
 endClass

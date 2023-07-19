@@ -1,7 +1,141 @@
 module Plasmacore
 
-NATIVE_POINTER_TYPE<<NativeGDNode,"godot::Node*">>
+class GDNode [compound]
+  GLOBAL METHODS
+    method create<<$ClassName>>->GDNode
+      local result : GDNode
+      native @|$result = (PlasmacoreGDNode){ memnew($ClassName) };
+      return result
 
+    method operator?( obj:GDNode )->Logical
+      return obj.exists
+
+  PROPERTIES
+    native "godot::Node* value;"
+
+  METHODS
+    method cloned->GDNode
+      return query_node<<duplicate>>
+
+    method add( child:GDNode )
+      call<<add_child>>( child )
+
+    method count->Int32
+      return query_int32<<get_child_count>>
+
+    method name->String
+      return query_string<<get_name>>
+
+    method get( index:Int32 )->GDNode
+      local result : GDNode
+      native @|if ($this.value) $result = (PlasmacoreGDNode){ $this.value->get_child($index) };
+      return result
+
+    method get( node_path:String )->GDNode
+      local result : GDNode
+      if (this.exists)
+        native @|godot::NodePath path( $node_path->data->as_utf8 );
+                |$result = (PlasmacoreGDNode){ $this.value->get_node_or_null( path ) };
+      endIf
+      return result
+
+    method instance_of<<$GodotType>>->Logical
+      local result : Logical
+      native @|if ($this.value) $result = !!godot::Object::cast_to<godot::$GodotType>( $this.value );
+      return result
+
+    method last->GDNode
+      return this[ count-1 ]
+
+    method set_pixel_scale( scale:Real )
+      call<<Sprite3D,set_pixel_size>>( scale )
+
+    method set_position( xy:XY )
+      call<<Node3D,set_position>>( XYZ(xy,Plasmacore.nominal_z) )
+
+    method set_rotation( radians:Radians )
+      call<<Node3D,set_rotation>>( XYZ(0,0,radians.value) )
+
+    method set_scale( scale:Real )
+      call<<Node3D,set_scale>>( XYZ(scale,scale,scale) )
+
+    method set_scale( scale:RealXY )
+      call<<Node3D,set_scale>>( XYZ(scale,1.0) )
+
+    method set_visible( setting:Logical )
+      call<<Node2D,set_visible>>( setting )
+      call<<Node3D,set_visible>>( setting )
+
+    method to->String
+      if (not this.exists) return "null"
+      return name
+
+    method call<<$GodotType,$method_name>>( value:Logical )
+      native @|if ($this.value)
+              |{
+              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
+              |  if (node) node->$method_name( $value );
+              |}
+
+    method call<<$method_name>>( new_value:GDNode )
+      native @|if ($this.value)
+              |{
+              |  if ($this.value) $this.value->$method_name( $new_value.value );
+              |}
+
+    method call<<$GodotType,$method_name>>( new_value:GDNode )
+      native @|if ($this.value)
+              |{
+              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
+              |  if (node) node->$method_name( $new_value.value );
+              |}
+
+    method call<<$GodotType,$method_name>>( value:Real )
+      if (not this) return
+      native @|if ($this.value)
+              |{
+              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
+              |  if (node) node->$method_name( (float)$value );
+              |}
+
+    method call<<$GodotType,$method_name>>( xyz:XYZ )
+      if (not this) return
+      native @|if ($this.value)
+              |{
+              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
+              |  if (node)
+              |  {
+              |    godot::Vector3 value( (float)$xyz.x, (float)$xyz.y, (float)$xyz.z );
+              |    node->$method_name( value );
+              |  }
+              |}
+
+    method query_int32<<$method_name>>()->Int32
+      local result : Int32
+      native @|if ($this.value) $result = $this.value->$method_name();
+      return result
+
+    method query_int32<<$GodotType,$method_name>>()->Int32
+      local result : Int32
+      native @|godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
+              |if (node) $result = node->$method_name();
+      return result
+
+    method query_node<<$method_name>>()->GDNode
+      local result : GDNode
+      native @|if ($this.value) $result = (PlasmacoreGDNode){ $this.value->$method_name() };
+      return result
+
+    method query_string<<$method_name>>()->String
+      local result : String
+      native @|if ($this.value) $result = RogueString_create( ((godot::String)$this.value->$method_name()).utf8().get_data() );
+      return result
+
+    method exists->Logical
+      return native("!!$this.value")->Logical
+endClass
+
+#{
 class GDNode( gd_node:NativeGDNode, type:GDNodeType ) [compound]
   GLOBAL METHODS
     method create( gd_node:NativeGDNode )->GDNode
@@ -89,14 +223,14 @@ class GDNode( gd_node:NativeGDNode, type:GDNodeType ) [compound]
       native @|String new_name( $new_name );
               |$gd_node.value->set_name( new_name );
 
-    method set_pixel_scale( scale:Real64 )
+    method set_pixel_scale( scale:Real )
       trace
       type.set_pixel_scale( gd_node, scale )
 
     method set_position( xy:RealXY )
       type.set_position( gd_node, xy )
 
-    method set_rotation( z:Real64 )
+    method set_rotation( z:Real )
       set_rotation( XYZ(0,0,z) )
 
     method set_rotation( xyz:XYZ )
@@ -118,7 +252,7 @@ endClass
 
 class GDNodeType [singleton]
   METHODS
-    method set_pixel_scale( gd_node:NativeGDNode, scale:Real64 )
+    method set_pixel_scale( gd_node:NativeGDNode, scale:Real )
       trace
       noAction
 
@@ -169,7 +303,7 @@ endClass
 
 class GDNodeTypeSprite3D : GDNodeTypeNode3D [singleton]
   METHODS
-    method set_pixel_scale( gd_node:NativeGDNode, scale:Real64 )
+    method set_pixel_scale( gd_node:NativeGDNode, scale:Real )
       trace
       native @|godot::Object::cast_to<godot::Sprite3D>( $gd_node.value )->set_pixel_size( (float)$scale );
 
@@ -179,3 +313,4 @@ class GDNodeTypeSprite3D : GDNodeTypeNode3D [singleton]
       native @|$native_ref = (NativeGDRef){ ref.ptr() };
       return GDRef( native_ref, GDRefTypeTexture2D )
 endClass
+}#

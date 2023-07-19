@@ -23,9 +23,9 @@ void NativePlasmacore::launch()
 void NativePlasmacore::on_new_scene_2dx( Node* root, float nominal_z )
 {
   if (Engine::get_singleton()->is_editor_hint()) return;
-	PlasmacorePlasmacore__on_new_scene_2dx__NativeGDNode_RogueReal64(
+	PlasmacorePlasmacore__on_new_scene_2dx__PlasmacoreGDNode_RogueReal64(
       ROGUE_SINGLETON(PlasmacorePlasmacore),
-      (NativeGDNode){root},
+      (PlasmacoreGDNode){root},
       nominal_z
   );
 }
