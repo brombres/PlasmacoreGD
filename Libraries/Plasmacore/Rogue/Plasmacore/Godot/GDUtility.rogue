@@ -1,0 +1,111 @@
+module Plasmacore
+
+NATIVE_POINTER_TYPE<<GDArrayPointer,   "godot::Array*">>
+NATIVE_POINTER_TYPE<<GDVariantPointer, "godot::Variant*">>
+
+class GDUtility [singleton]
+  METHODS
+    method list_to_array( list:Value, array:GDArrayPointer )
+      forEach (value in list)
+        local variant_pointer : GDVariantPointer
+        native @|godot::Variant variant;
+                |$variant_pointer = (GDVariantPointer){ &variant };
+        value_to_variant( value, variant_pointer );
+        native @|$array.value->push_back( variant );
+      endForEach
+
+    method value_to_variant( value:Value, variant:GDVariantPointer )
+      which (value.type)
+        case Value.TYPE_UNDEFINED, Value.TYPE_NULL, Value.TYPE_OBJECT
+          return
+        case Value.TYPE_BYTE, Value.TYPE_CHARACTER, Value.TYPE_INT32, Value.TYPE_INT64
+          local value = value->Int32
+          native @|*($variant.value) = $value;
+        case Value.TYPE_REAL32, Value.TYPE_REAL64
+          local value = value->Real64
+          native @|*($variant.value) = $value;
+        case Value.TYPE_LOGICAL
+          if (value->Logical) native @|*($variant.value) = (bool) 1;
+          else                native @|*($variant.value) = (bool) 0;
+        case Value.TYPE_XY
+          local value = value->XY
+          native @|*($variant.value) = godot::Vector2i($value.x,$value.y);
+        case Value.TYPE_BOX
+          local value = value->Box
+          native @|*($variant.value) = godot::Rect2i( $value.position.x, $value.position.y, $value.size.x, $value.size.y );
+        case Value.TYPE_STRING
+          local value = value->String
+          native @|godot::String st( $value->data->as_utf8 );
+                  |*($variant.value) = st;
+        case Value.TYPE_LIST, Value.TYPE_TABLE
+          # TODO - maybe?
+          return
+      endWhich
+
+    method variant_to_value( variant:GDVariantPointer )->Value
+      local result_string : String
+      native @|switch ( $variant.value->get_type() )
+              |{
+              |  case NIL:
+              |  {
+                   return undefined
+      native @|  }
+              |  case BOOL:
+              |  {
+                   return native("(bool)*($variant.value)")->Logical
+      native @|  }
+              |  case INT:
+              |  {
+                   return native("(int64_t)*($variant.value)")->Int64
+      native @|  }
+              |  case FLOAT:
+              |  {
+                   return native("(double)*($variant.value)")->Real64
+      native @|  }
+              |  case STRING:
+              |  {
+              |    godot::String st = *($variant.value);
+              |    $result_string = RogueString_create( st.utf8().get_data() );
+                   return result_string
+
+      native @|  }
+              |  case VECTOR2:
+              |  case VECTOR2I:
+              |  case RECT2:
+              |  case RECT2I:
+              |  case VECTOR3:
+              |  case VECTOR3I:
+              |  case TRANSFORM2D:
+              |  case VECTOR4:
+              |  case VECTOR4I:
+              |  case PLANE:
+              |  case QUATERNION:
+              |  case AABB:
+              |  case BASIS:
+              |  case TRANSFORM3D:
+              |  case PROJECTION:
+              |
+              |  case COLOR:
+              |  case STRING_NAME:
+              |  case NODE_PATH:
+              |  case RID:
+              |  case OBJECT:
+              |  case CALLABLE:
+              |  case SIGNAL:
+              |  case DICTIONARY:
+              |  case ARRAY:
+              |
+              |  case PACKED_BYTE_ARRAY:
+              |  case PACKED_INT32_ARRAY:
+              |  case PACKED_INT64_ARRAY:
+              |  case PACKED_FLOAT32_ARRAY:
+              |  case PACKED_FLOAT64_ARRAY:
+              |  case PACKED_STRING_ARRAY:
+              |  case PACKED_VECTOR2_ARRAY:
+              |  case PACKED_VECTOR3_ARRAY:
+              |  case PACKED_COLOR_ARRAY:
+              |    break;
+              |}
+      return undefined
+
+endClass

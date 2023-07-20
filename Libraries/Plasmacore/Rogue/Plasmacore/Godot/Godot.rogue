@@ -13,3 +13,5 @@ $include Godot/ErrorLog
 $include Godot/Log
 $include Godot/GDNode
 $include Godot/GDRef
+$include Godot/GDUtility
+

@@ -23,7 +23,6 @@ class Plasmacore [essential api singleton]
     is_3d  : Logical
 
     drawable : Drawable
-    angle = Radians(0)
 
   METHODS
     method init
@@ -32,7 +31,7 @@ class Plasmacore [essential api singleton]
 
     method draw
       if (drawable)
-        drawable.draw( Display.center, 0.5, angle )
+        drawable.draw( XY(100,100) )
       endIf
 
       (forEach in drawables_list).on_finished_drawing
@@ -49,11 +48,18 @@ class Plasmacore [essential api singleton]
       drawables_list.clear
       drawables_lookup.clear
 
-      drawable = Drawable( "MacrossLogo" )
+      drawable = Drawable( "Sand" )
+      trace drawable.template_node.has_method( "set_variation" )
+      drawable.template_node.call( "set_variation", @[4] )
 
     method on_update( dt:Real64, display_size:XY )
       Display.size = display_size
 
-      if (drawable) angle += Degrees(30*dt)->Radians
+      if (gd_scene.name != "Testing")
+        trace gd_scene
+        gd_scene.name = "Testing"
+        trace gd_scene
+      endIf
+
       draw
 endClass

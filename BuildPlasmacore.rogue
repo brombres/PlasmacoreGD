@@ -216,6 +216,15 @@ routine copy( filename:String, project_path:String, &needs_header )->Logical
   local message = "Synchronizing build products to linked projects"
   local src = File("Libraries/Plasmacore/Godot"/filename)
   local dest = File(project_path/filename)
+
+  if (not dest.exists)
+    # Check for relocated product
+    local listing = File(project_path/"**"/filename).listing
+    if (listing.count == 1)
+      dest = listing.first
+    endIf
+  endIf
+
   local copied_any = false
 
   if (dest.exists and dest.is_newer_than(src))  # FIXME: DEV KLUDGE

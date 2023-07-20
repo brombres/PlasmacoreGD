@@ -33,7 +33,7 @@ class NativePlasmacore : public RefCounted
 
     void launch();
 		void on_new_scene( int mode, Node* root, Node* config );
-    void on_update( float dt, Vector2 display_size );
+    void on_update( double dt, Vector2 display_size );
 };
 
 #endif // PLASMACORE_H

@@ -31,7 +31,7 @@ void NativePlasmacore::on_new_scene( int mode, Node* root, Node* config )
   );
 }
 
-void NativePlasmacore::on_update( float dt, Vector2 display_size )
+void NativePlasmacore::on_update( double dt, Vector2 display_size )
 {
   if ( !Engine::get_singleton()->is_editor_hint() )
   {

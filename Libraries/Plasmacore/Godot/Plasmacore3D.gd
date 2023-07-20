@@ -1,5 +1,5 @@
 class_name Plasmacore3D
-extends Node2D
+extends Node3D
 
 func _ready():
 	var assets = $Assets
