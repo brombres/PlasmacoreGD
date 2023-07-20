@@ -23,6 +23,9 @@ class GDNode [compound]
     method count->Int32
       return query_int32<<get_child_count>>
 
+    method filepath->String
+      return query_string<<get_file_path>>
+
     method name->String
       return query_string<<get_name>>
 

@@ -52,7 +52,6 @@ class Drawable
         node = hidden.remove_last
         node.visible = true
       else
-        trace
         node = template_node.cloned
         subtree.add( node )
         node.visible = true
