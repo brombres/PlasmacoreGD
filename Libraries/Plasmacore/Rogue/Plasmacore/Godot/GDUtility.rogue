@@ -43,67 +43,74 @@ class GDUtility [singleton]
       endWhich
 
     method variant_to_value( variant:GDVariantPointer )->Value
+      if (not variant.exists) return undefined
+
+      local type : Int32
+      native @|$type = (RogueInt32) $variant.value->get_type();
+
       local result_string : String
       native @|switch ( $variant.value->get_type() )
               |{
-              |  case NIL:
+              |  case godot::Variant::Type::NIL:
               |  {
                    return undefined
       native @|  }
-              |  case BOOL:
+              |  case godot::Variant::Type::BOOL:
               |  {
                    return native("(bool)*($variant.value)")->Logical
       native @|  }
-              |  case INT:
+              |  case godot::Variant::Type::INT:
               |  {
                    return native("(int64_t)*($variant.value)")->Int64
       native @|  }
-              |  case FLOAT:
+              |  case godot::Variant::Type::FLOAT:
               |  {
                    return native("(double)*($variant.value)")->Real64
       native @|  }
-              |  case STRING:
+              |  case godot::Variant::Type::STRING:
               |  {
               |    godot::String st = *($variant.value);
               |    $result_string = RogueString_create( st.utf8().get_data() );
                    return result_string
 
       native @|  }
-              |  case VECTOR2:
-              |  case VECTOR2I:
-              |  case RECT2:
-              |  case RECT2I:
-              |  case VECTOR3:
-              |  case VECTOR3I:
-              |  case TRANSFORM2D:
-              |  case VECTOR4:
-              |  case VECTOR4I:
-              |  case PLANE:
-              |  case QUATERNION:
-              |  case AABB:
-              |  case BASIS:
-              |  case TRANSFORM3D:
-              |  case PROJECTION:
+              |  case godot::Variant::Type::VECTOR2:
+              |  case godot::Variant::Type::VECTOR2I:
+              |  case godot::Variant::Type::RECT2:
+              |  case godot::Variant::Type::RECT2I:
+              |  case godot::Variant::Type::VECTOR3:
+              |  case godot::Variant::Type::VECTOR3I:
+              |  case godot::Variant::Type::TRANSFORM2D:
+              |  case godot::Variant::Type::VECTOR4:
+              |  case godot::Variant::Type::VECTOR4I:
+              |  case godot::Variant::Type::PLANE:
+              |  case godot::Variant::Type::QUATERNION:
+              |  case godot::Variant::Type::AABB:
+              |  case godot::Variant::Type::BASIS:
+              |  case godot::Variant::Type::TRANSFORM3D:
+              |  case godot::Variant::Type::PROJECTION:
               |
-              |  case COLOR:
-              |  case STRING_NAME:
-              |  case NODE_PATH:
-              |  case RID:
-              |  case OBJECT:
-              |  case CALLABLE:
-              |  case SIGNAL:
-              |  case DICTIONARY:
-              |  case ARRAY:
+              |  case godot::Variant::Type::COLOR:
+              |  case godot::Variant::Type::STRING_NAME:
+              |  case godot::Variant::Type::NODE_PATH:
+              |  case godot::Variant::Type::RID:
+              |  case godot::Variant::Type::OBJECT:
+              |  case godot::Variant::Type::CALLABLE:
+              |  case godot::Variant::Type::SIGNAL:
+              |  case godot::Variant::Type::DICTIONARY:
+              |  case godot::Variant::Type::ARRAY:
               |
-              |  case PACKED_BYTE_ARRAY:
-              |  case PACKED_INT32_ARRAY:
-              |  case PACKED_INT64_ARRAY:
-              |  case PACKED_FLOAT32_ARRAY:
-              |  case PACKED_FLOAT64_ARRAY:
-              |  case PACKED_STRING_ARRAY:
-              |  case PACKED_VECTOR2_ARRAY:
-              |  case PACKED_VECTOR3_ARRAY:
-              |  case PACKED_COLOR_ARRAY:
+              |  case godot::Variant::Type::PACKED_BYTE_ARRAY:
+              |  case godot::Variant::Type::PACKED_INT32_ARRAY:
+              |  case godot::Variant::Type::PACKED_INT64_ARRAY:
+              |  case godot::Variant::Type::PACKED_FLOAT32_ARRAY:
+              |  case godot::Variant::Type::PACKED_FLOAT64_ARRAY:
+              |  case godot::Variant::Type::PACKED_STRING_ARRAY:
+              |  case godot::Variant::Type::PACKED_VECTOR2_ARRAY:
+              |  case godot::Variant::Type::PACKED_VECTOR3_ARRAY:
+              |  case godot::Variant::Type::PACKED_COLOR_ARRAY:
+              |
+              |  case godot::Variant::Type::VARIANT_MAX:
               |    break;
               |}
       return undefined

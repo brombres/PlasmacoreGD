@@ -50,7 +50,7 @@ class Plasmacore [essential api singleton]
 
       drawable = Drawable( "Sand" )
       trace drawable.template_node.has_method( "set_variation" )
-      drawable.template_node.call( "set_variation", @[4] )
+      trace drawable.template_node.call( "set_variation", 5 )
 
     method on_update( dt:Real64, display_size:XY )
       Display.size = display_size

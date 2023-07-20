@@ -23,6 +23,8 @@ class GDNode [compound]
       invoke<<add_child>>( child )
 
     method call( gd_method_name:String, args=undefined:Value )->Value
+      local result = undefined
+      local gd_result : GDVariantPointer
       if (args.is_list)
         local array_pointer : GDArrayPointer
         native
@@ -33,8 +35,11 @@ class GDNode [compound]
            |  $array_pointer = (GDArrayPointer){ &args };
               GDUtility.list_to_array( args, array_pointer )
         native
-          @|  $this.value->callv( method_name, args );
-           |}
+          @|  godot::Variant result = $this.value->callv( method_name, args );
+           |  $gd_result = (GDVariantPointer){ &result };
+              return GDUtility.variant_to_value( gd_result )
+        native
+          @|}
       else
         local variant_pointer : GDVariantPointer
         native @|godot::Variant arg;
@@ -44,43 +49,13 @@ class GDNode [compound]
           @|if ($this.value)
            |{
            |  godot::StringName method_name( $gd_method_name->data->as_utf8 );
-           |  $this.value->call( method_name, arg );
-           |}
-      endIf
-      return undefined
-      #{
-      local result = undefined
-
-      if (args.is_list)
+           |  godot::Variant result = $this.value->call( method_name, arg );
+           |  $gd_result = (GDVariantPointer){ &result };
+              return GDUtility.variant_to_value( gd_result )
         native
-          @|if ($this.value)
-           |{
-           |  godot::StringName arg( $gd_method_name->data->as_utf8 );
-           |  $this.value->$method_name( arg );
-           |}
-      else
+          @|}
       endIf
-
-      use arg_list = ValueListPool
-        if (args.is_list)
-          arg_list.add( forEach in args )
-        native
-          @|if ($this.value)
-           |{
-           |  godot::StringName arg( $arg->data->as_utf8 );
-           |  $this.value->$method_name( arg );
-           |}
-        if (args.is_undefined or (args.is_list and args.is_empty))
-        elseIf (args.is_list)
-          which (args.count)
-            case 0
-            case 1
-            others
-          endWhich
-        else
-        endIf
-      endUse
-      }#
+      return result
 
     method count->Int32
       return query_int32<<get_child_count>>
