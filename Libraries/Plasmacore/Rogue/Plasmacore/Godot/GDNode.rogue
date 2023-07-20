@@ -1,7 +1,5 @@
 module Plasmacore
 
-uses Utility/ValueListPool
-
 class GDNode [compound]
   GLOBAL METHODS
     method create<<$ClassName>>->GDNode
@@ -60,11 +58,14 @@ class GDNode [compound]
     method count->Int32
       return query_int32<<get_child_count>>
 
+    method exists->Logical
+      return native("!!$this.value")->Logical
+
     method filepath->String
       return query_string<<get_file_path>>
 
     method has_method( name:String )->Logical
-      return query_logical_with_string_name<<has_method>>( name )
+      return query_logical<<has_method>>( name )
 
     method name->String
       return query_string<<get_name>>
@@ -86,6 +87,9 @@ class GDNode [compound]
       local result : Logical
       native @|if ($this.value) $result = !!godot::Object::cast_to<godot::$GodotType>( $this.value );
       return result
+
+    method meta( name:String )->Value
+      return query_value<<get_meta>>( name )
 
     method last->GDNode
       return this[ count-1 ]
@@ -115,6 +119,9 @@ class GDNode [compound]
     method set_visible( setting:Logical )
       invoke<<Node2D,set_visible>>( setting )
       invoke<<Node3D,set_visible>>( setting )
+
+    method sprite_frames->GDObject
+      return query_object<<AnimatedSprite2D,get_sprite_frames>>
 
     method to->String
       if (not this.exists) return "null"
@@ -202,7 +209,24 @@ class GDNode [compound]
       native @|if ($this.value) $result = (PlasmacoreGDNode){ $this.value->$method_name() };
       return result
 
-    method query_logical_with_string_name<<$method_name>>( arg:String )->Logical
+    method query_object<<$method_name>>()->GDObject
+      local result : GDObject
+      native @|if ($this.value) $result = (PlasmacoreGDObject){ $this.value->$method_name().ptr() };
+      return result
+
+    method query_object<<$GodotType,$method_name>>->GDObject
+      local result : GDObject
+      native @|if ($this.value)
+              |{
+              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
+              |  if (node)
+              |  {
+              |    $result = (PlasmacoreGDObject){ node->$method_name().ptr() };
+              |  }
+              |}
+      return result
+
+    method query_logical<<$method_name>>( arg:String )->Logical
       local result : Logical
       native @|if ($this.value)
               |{
@@ -216,8 +240,20 @@ class GDNode [compound]
       native @|if ($this.value) $result = RogueString_create( ((godot::String)$this.value->$method_name()).utf8().get_data() );
       return result
 
-    method exists->Logical
-      return native("!!$this.value")->Logical
+    method query_value<<$method_name>>( arg:String )->Value
+      local result : Value
+      local v_pointer : GDVariantPointer
+      native @|if ($this.value)
+              |{
+              |  godot::StringName arg( $arg->data->as_utf8 );
+              |  godot::Variant result = $this.value->$method_name( arg );
+              |  godot::UtilityFunctions::print( "META:" );
+              |  godot::UtilityFunctions::print( result );
+              |  GDVariantPointer v_pointer = (GDVariantPointer){ &result };
+                 result = GDUtility.variant_to_value( v_pointer )
+      native @|}
+      return result
+
 endClass
 
 #{

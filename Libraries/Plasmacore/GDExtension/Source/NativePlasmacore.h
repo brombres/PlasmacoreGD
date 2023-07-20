@@ -10,8 +10,6 @@
 
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/classes/node.hpp>
-#include <godot_cpp/classes/camera3d.hpp>
-#include <godot_cpp/classes/material.hpp>
 
 #include "Generated/RogueProgram.h"
 

@@ -15,14 +15,12 @@ class Plasmacore [essential api singleton]
     gd_assets    : GDNode
     gd_drawables : GDNode
 
-    drawables_list   = Drawable[]
-    drawables_lookup = [String:Drawable]
-
     is_2d  : Logical
     is_2dx : Logical
     is_3d  : Logical
 
     drawable : Drawable
+    d2 : Drawable
 
   METHODS
     method init
@@ -32,9 +30,8 @@ class Plasmacore [essential api singleton]
     method draw
       if (drawable)
         drawable.draw( XY(100,100) )
+        d2.draw( XY(300,100) )
       endIf
-
-      (forEach in drawables_list).on_finished_drawing
 
     method on_new_scene( mode:Int32, gd_root, gd_config )
       is_2dx = (mode == 1)
@@ -45,12 +42,10 @@ class Plasmacore [essential api singleton]
       gd_assets = gd_config//Assets
       if (gd_assets) gd_drawables = gd_assets//Drawables
 
-      drawables_list.clear
-      drawables_lookup.clear
-
       drawable = Drawable( "Sand" )
-      trace drawable.template_node.has_method( "set_variation" )
-      trace drawable.template_node.call( "set_variation", 5 )
+      drawable.node( "set_variation", 7 )
+
+      d2 = drawable.cloned
 
     method on_update( dt:Real64, display_size:XY )
       Display.size = display_size

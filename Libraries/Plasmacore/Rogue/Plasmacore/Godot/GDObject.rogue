@@ -1,0 +1,198 @@
+module Plasmacore
+
+class GDObject [compound]
+  GLOBAL METHODS
+    method operator?( obj:GDObject )->Logical
+      return obj.exists
+
+  PROPERTIES
+    native "godot::Object* value;"
+
+  METHODS
+    method call( gd_method_name:String, args=undefined:Value )->Value
+      local result = undefined
+      local gd_result : GDVariantPointer
+      if (args.is_list)
+        local array_pointer : GDArrayPointer
+        native
+          @|if ($this.value)
+           |{
+           |  godot::StringName method_name( $gd_method_name->data->as_utf8 );
+           |  godot::Array args;
+           |  $array_pointer = (GDArrayPointer){ &args };
+              GDUtility.list_to_array( args, array_pointer )
+        native
+          @|  godot::Variant result = $this.value->callv( method_name, args );
+           |  $gd_result = (GDVariantPointer){ &result };
+              return GDUtility.variant_to_value( gd_result )
+        native
+          @|}
+      else
+        local variant_pointer : GDVariantPointer
+        native @|godot::Variant arg;
+                |$variant_pointer = (GDVariantPointer){ &arg };
+        GDUtility.value_to_variant( args, variant_pointer )
+        native
+          @|if ($this.value)
+           |{
+           |  godot::StringName method_name( $gd_method_name->data->as_utf8 );
+           |  godot::Variant result = $this.value->call( method_name, arg );
+           |  $gd_result = (GDVariantPointer){ &result };
+              return GDUtility.variant_to_value( gd_result )
+        native
+          @|}
+      endIf
+      return result
+
+    method exists->Logical
+      return native("!!$this.value")->Logical
+
+    method texture( frame_name:String, index:Int32 )->GDObject
+      return query_object<<SpriteFrames,get_frame_texture>>( frame_name, index )
+
+    method has_method( name:String )->Logical
+      return query_logical<<has_method>>( name )
+
+    method instance_of<<$GodotType>>->Logical
+      local result : Logical
+      native @|if ($this.value) $result = !!godot::Object::cast_to<godot::$GodotType>( $this.value );
+      return result
+
+    method size->XY
+      return query_xy<<Texture2D,get_size>>
+
+    method invoke<<$GodotType,$method_name>>( value:Logical )
+      native @|if ($this.value)
+              |{
+              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
+              |  if (node) node->$method_name( $value );
+              |}
+
+    method invoke<<$method_name>>( new_value:GDObject )
+      native @|if ($this.value)
+              |{
+              |  if ($this.value) $this.value->$method_name( $new_value.value );
+              |}
+
+    method invoke<<$GodotType,$method_name>>( new_value:GDObject )
+      native @|if ($this.value)
+              |{
+              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
+              |  if (node) node->$method_name( $new_value.value );
+              |}
+
+    method invoke<<$GodotType,$method_name>>( value:Real )
+      if (not this) return
+      native @|if ($this.value)
+              |{
+              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
+              |  if (node) node->$method_name( $value );
+              |}
+
+    method invoke_with_string<<$method_name>>( arg:String )
+      native @|if ($this.value)
+              |{
+              |  godot::String arg( $arg->data->as_utf8 );
+              |  $this.value->$method_name( arg );
+              |}
+
+    method invoke_with_string_name<<$method_name>>( arg:String )
+      native @|if ($this.value)
+              |{
+              |  godot::StringName arg( $arg->data->as_utf8 );
+              |  $this.value->$method_name( arg );
+              |}
+
+    method invoke<<$GodotType,$method_name>>( xy:RealXY )
+      if (not this) return
+      native @|if ($this.value)
+              |{
+              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
+              |  if (node)
+              |  {
+              |    godot::Vector2 value( $xy.x, $xy.y );
+              |    node->$method_name( value );
+              |  }
+              |}
+
+    method invoke<<$GodotType,$method_name>>( xyz:XYZ )
+      if (not this) return
+      native @|if ($this.value)
+              |{
+              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
+              |  if (node)
+              |  {
+              |    godot::Vector3 value( $xyz.x, $xyz.y, $xyz.z );
+              |    node->$method_name( value );
+              |  }
+              |}
+
+    method query_int32<<$method_name>>()->Int32
+      local result : Int32
+      native @|if ($this.value) $result = $this.value->$method_name();
+      return result
+
+    method query_int32<<$GodotType,$method_name>>()->Int32
+      local result : Int32
+      native @|godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
+              |if (node) $result = node->$method_name();
+      return result
+
+    method query_logical<<$method_name>>( arg:String )->Logical
+      local result : Logical
+      native @|if ($this.value)
+              |{
+              |  godot::StringName arg( $arg->data->as_utf8 );
+              |  $result = $this.value->$method_name( arg );
+              |}
+      return result
+
+    method query_node<<$method_name>>()->GDObject
+      local result : GDObject
+      native @|if ($this.value) $result = (PlasmacoreGDObject){ $this.value->$method_name() };
+      return result
+
+    method query_object<<$GodotType,$method_name>>( name:String, value:Int32 )->GDObject
+      local result : GDObject
+      native @|if ($this.value)
+              |{
+              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
+              |  if (node)
+              |  {
+              |    godot::StringName string_name( $name->data->as_utf8 );
+              |    $result = (PlasmacoreGDObject){ node->$method_name( string_name, $value ).ptr() };
+              |  }
+              |}
+      return result
+
+    method query_realxy<<$GodotType,$method_name>>->RealXY
+      local result : RealXY
+      native @|if ($this.value)
+              |{
+              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
+              |  if (node)
+              |  {
+              |    godot::Vector2 v = node->$method_name();
+              |    $result = (GeometryRealXY){ v.x, v.y };
+              |  }
+              |}
+      return result
+
+    method query_string<<$method_name>>()->String
+      local result : String
+      native @|if ($this.value) $result = RogueString_create( ((godot::String)$this.value->$method_name()).utf8().get_data() );
+      return result
+
+    method query_xy<<$GodotType,$method_name>>->XY
+      local result : XY
+      native @|if ($this.value)
+              |{
+              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
+              |  if (node)
+              |  {
+              |    godot::Vector2i v = node->$method_name();
+              |    $result = (GeometryXY){ v.x, v.y };
+              |  }
+              |}
+      return result
+endClass

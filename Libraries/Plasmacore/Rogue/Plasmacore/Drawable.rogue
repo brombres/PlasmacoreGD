@@ -1,13 +1,11 @@
 module Plasmacore
 
 class Drawable
-  GLOBAL METHODS
-    method create( name:String )->Drawable
-      local existing = Plasmacore.drawables_lookup.find( name )
-      if (existing) return existing.value
+  PROPERTIES
+    node : GDNode
 
-      local node : GDNode
-
+  METHODS
+    method init( name:String )
       contingent
         if (Plasmacore.gd_drawables) node = Plasmacore.gd_drawables[name]
         sufficient (node)
@@ -21,42 +19,32 @@ class Drawable
         node = Plasmacore.gd_scene[name]
       endContingent
 
-      local drawable = Drawable( node, Plasmacore.drawables_list.count )
-      Plasmacore.drawables_list.add( drawable )
-      Plasmacore.drawables_lookup[ name ] = drawable
+      if (node) init( node.cloned )
 
-      return drawable
-
-  PROPERTIES
-    subtree       : GDNode
-    template_node : GDNode
-
-    hidden = GDNode[]
-    ready  = GDNode[]
-    drawn  = GDNode[]
-
-  METHODS
-    method init( template_node, subtree_index:Int32 )
-      template_node.pixel_scale = 1.0  # only affects Sprite3D
-
-      if (Plasmacore.is_2d) subtree = GDNode.create<<Node2D>>
-      else                  subtree = GDNode.create<<Node3D>>
-      subtree.name = "Instances_$"(subtree_index)
-      Plasmacore.gd_config.add( subtree )
-
-    method draw( position:RealXY, scale=RealXY(1,1):RealXY, rotation=Radians(0):Radians )
-      local node : GDNode
-      if (ready.count)
-        node = ready.remove_last
-      elseIf (hidden.count)
-        node = hidden.remove_last
+    method init( node )
+      if (node)
+        Plasmacore.gd_config.add( node )
         node.visible = true
-      else
-        node = template_node.cloned
-        subtree.add( node )
-        node.visible = true
+        node.pixel_scale = 1.0  # only affects Sprite3D
       endIf
 
+      trace node.meta( "size" )
+
+    method base_size->XY
+      trace
+      if local frames = node.sprite_frames
+        trace
+        if local frame = frames.texture("",0)
+          trace
+          return frame.size
+        endIf
+      endIf
+      return XY(0,0)
+
+    method cloned->Drawable
+      return Drawable( node.cloned )
+
+    method draw( position:RealXY, scale=RealXY(1,1):RealXY, rotation=Radians(0):Radians )
       if (Plasmacore.is_2dx)
         node.position = RealXY( position.x, Display.size.y - position.y )
       else
@@ -64,11 +52,5 @@ class Drawable
       endIf
       node.scale = scale
       node.rotation = rotation.value
-
-      drawn.add( node )
-
-    method on_finished_drawing
-      loop (ready.count) hidden.add( ready.remove_last.[ visible=false ] )
-      loop (drawn.count) ready.add( drawn.remove_last )
 
 endClass
