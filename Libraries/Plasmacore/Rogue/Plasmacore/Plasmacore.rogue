@@ -9,18 +9,17 @@ $include Plasmacore/Drawable
 
 class Plasmacore [essential api singleton]
   PROPERTIES
-    gd_root_node      : GDObject
-    gd_scene_node     : GDObject
-    gd_config_node    : GDObject
-    gd_assets_node    : GDObject
-    gd_drawables_node : GDObject
+    gd_root      : GDObject
+    gd_scene     : GDObject
+    gd_config    : GDObject
+    gd_assets    : GDObject
+    gd_drawables : GDObject
 
     is_2d  : Logical
     is_2dx : Logical
     is_3d  : Logical
 
     drawable : Drawable
-    #d2 : Drawable
 
   METHODS
     method init
@@ -30,22 +29,19 @@ class Plasmacore [essential api singleton]
     method draw
       if (drawable)
         drawable.draw( XY(100,100) )
-        #d2.draw( XY(300,100) )
       endIf
 
-    method on_new_scene( mode:Int32, gd_root_node, gd_config_node )
+    method on_new_scene( mode:Int32, gd_root, gd_config )
       is_2dx = (mode == 1)
       is_2d = (mode == 2)
       is_3d = (mode == 3)
 
-      gd_scene_node  = gd_root_node.last
-      gd_assets_node = gd_config_node//Assets
-      if (gd_assets_node) gd_drawables_node = gd_assets_node//Drawables
+      gd_scene  = gd_root.last
+      gd_assets = gd_config//Assets
+      if (gd_assets) gd_drawables = gd_assets//Drawables
 
-      #drawable = Drawable( "Sand" )
-      #drawable.node( "set_variation", 7 )
-
-      #d2 = drawable.cloned
+      drawable = Drawable( "Sand" )
+      drawable.node( "set_variation", 7 )
 
     method on_update( dt:Real64, display_size:XY )
       Display.size = display_size

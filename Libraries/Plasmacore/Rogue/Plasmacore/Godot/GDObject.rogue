@@ -2,56 +2,47 @@ module Plasmacore
 
 ROGUE_NATIVE_POINTER_TYPE<<"godot::Object*",GDObject>>
 
-augment Rogue::Value
-  GLOBAL METHODS
-    method create( obj:GDObject )->Value
-      return Value( Boxed<<GDObject>>(obj) )
-
-  METHODS
-    method to->GDObject
-      if (type == Value.TYPE_OBJECT)
-        if local boxed_obj = this->Object->(as Boxed<<GDObject>>)
-          return boxed_obj.value
-        endIf
-      endIf
-      return GDObject()
-endAugment
-
 augment Rogue::GDObject
   METHODS
     method cloned->GDObject
-      return call<<"Node",duplicate>>
+      return query<<"Node",duplicate>>
 
     method add( child:GDObject )
-      call<<"Node",add_child>>( child )
+      call<<"Node",add_child,"Node">>( child )
 
     method call( method_name:String, args=undefined:Value )->Value
       if (not this) return undefined
 
       local v_name = GDVariant( method_name )
-      local v_args = GDVariant( args )
-      return native( "ROGUE_COMPOUND(GDVariant){ $this.value->callv($v_name.value, $v_args.value) }" )->GDVariant->Value
+
+      if (args.is_list)
+        local v_args = GDVariant( args )
+        return native( "ROGUE_COMPOUND(GDVariant){ $this.value->callv($v_name.value, $v_args.value) }" )->GDVariant
+      else
+        local v_arg = GDVariant( args )
+        return native( "ROGUE_COMPOUND(GDVariant){ $this.value->call($v_name.value, $v_arg.value) }" )->GDVariant
+      endIf
 
     method class_name->String
-      return call<<"Object",get_class>>->String
+      return query<<"Object",get_class>>->String
 
     method count->Int32
-      return call<<"Node",get_child_count>>->String
+      return query<<"Node",get_child_count>>->String
 
     method filepath->String
-      return call<<"Node",get_file_path>>
+      return query<<"Node",get_file_path>>
 
     method get( index:Int32 )->GDObject
-      return call<<"Node",get_child>>( index )->GDObject
+      return query<<"Node",get_child>>( index )->GDObject
 
     method get( node_path:String )->GDObject
-      return call<<"Node",get_node_or_null>>( node_path )->GDObject
+      return query<<"Node",get_node_or_null>>( node_path )->GDObject
 
     method has_method( name:String )->Logical
-      return call<<"Object",has_method>>
+      return query<<"Object",has_method>>
 
     method meta( name:String )->Value
-      return call<<"Object",get_meta>>( name )
+      return query<<"Object",get_meta>>( name )
 
     method instance_of<<$GodotType>>->Logical
       local result : Logical
@@ -62,7 +53,7 @@ augment Rogue::GDObject
       return this[ count - 1 ]
 
     method name->String
-      return call<<"Node",get_name>>
+      return query<<"Node",get_name>>
 
     method set_name( new_name:String )
       call<<"Node",set_name>>( new_name )
@@ -94,14 +85,58 @@ augment Rogue::GDObject
       call<<"Node2D",set_visible>>( setting )
       call<<"Node3D",set_visible>>( setting )
 
-    method sprite_frames->GDObject
-      return query_object<<AnimatedSprite2D,get_sprite_frames>>
+    method size->XY
+      if (this.instance_of<<"Texture2D">>) return query<<"Texture2D",get_size>>
+      return XY(0,0)
 
+    method sprite_frames->GDObject
+      return query<<"AnimatedSprite2D",get_sprite_frames>>
+
+    method texture( animation_name:String, index:Int32 )->GDObject
+      return query<<"SpriteFrames",get_frame_texture>>( animation_name, index )
 
     method to->String
       return name
 
-    method call<<$GodotType,$method_name>>->Value
+    method call<<$GodotType,$method_name>>
+      native
+        @|if ($this.value)
+         |{
+         |  godot::$GodotType* obj = godot::Object::cast_to<godot::$GodotType>( $this.value );
+         |  if (obj) obj->$method_name();
+         |}
+
+    method call<<$GodotType,$method_name>>( arg:Value )
+      local v_arg = GDVariant( arg )
+      native
+        @|if ($this.value)
+         |{
+         |  godot::$GodotType* obj = godot::Object::cast_to<godot::$GodotType>( $this.value );
+         |  if (obj) obj->$method_name( $v_arg.value );
+         |}
+
+    method call<<$GodotType,$method_name,$GodotArgType>>( arg:Value )
+      local v_arg = GDVariant( arg )
+      native
+        @|if ($this.value)
+         |{
+         |  godot::$GodotType* obj = godot::Object::cast_to<godot::$GodotType>( $this.value );
+         |  godot::$GodotArgType* arg = godot::Object::cast_to<godot::$GodotArgType>( (godot::Object*)($v_arg.value) );
+         |  if (obj) obj->$method_name( arg );
+         |}
+
+    method call<<$GodotType,$method_name>>( arg1:Value, arg2:Value )
+      local v_arg1 = GDVariant( arg1 )
+      local v_arg2 = GDVariant( arg2 )
+
+      native
+        @|if ($this.value)
+         |{
+         |  godot::$GodotType* obj = godot::Object::cast_to<godot::$GodotType>( $this.value );
+         |  if (obj) obj->$method_name( $v_arg1.value, $v_arg2.value );
+         |}
+
+    method query<<$GodotType,$method_name>>->Value
       local v_result : GDVariant
 
       native
@@ -116,7 +151,7 @@ augment Rogue::GDObject
 
       return v_result->Value
 
-    method call<<$GodotType,$method_name>>( arg:Value )->Value
+    method query<<$GodotType,$method_name>>( arg:Value )->Value
       local v_result : GDVariant
       local v_arg = GDVariant( arg )
 
@@ -132,7 +167,7 @@ augment Rogue::GDObject
 
       return v_result->Value
 
-    method call<<$GodotType,$method_name>>( arg1:Value, arg2:Value )->Value
+    method query<<$GodotType,$method_name>>( arg1:Value, arg2:Value )->Value
       local v_result : GDVariant
       local v_arg1 = GDVariant( arg1 )
       local v_arg2 = GDVariant( arg2 )
@@ -151,248 +186,19 @@ augment Rogue::GDObject
 
 endAugment
 
-  #{
-NATIVE_POINTER_TYPE<<NativeGDObject, "godot::Object*">>
 
-class GDObject( native_object:NativeGDObject, type:GDObjectType ) [compound]
-  GLOBAL PROPERTIES
-    type_lookup    : [String:GDObjectType]
-
+augment Rogue::Value
   GLOBAL METHODS
-    method create( native_object:NativeGDObject )->GDObject
-      if (not type_lookup)
-        type_lookup = [String:GDObjectType]
-        type_lookup//CanvasItem = GDObjectTypeCanvasItem
-        type_lookup//Control    = GDObjectTypeControl
-        type_lookup//Node       = GDObjectTypeNode
-        type_lookup//Node2D     = GDObjectTypeNode2D
-        type_lookup//Node3D     = GDObjectTypeNode3D
-        type_lookup//Object     = GDObjectTypeObject
-      endIf
-
-      local obj = GDObject( native_object, null )
-      obj.type = type_lookup[ obj.class_name ]
-
-      if (not obj.type)
-        if (obj.instance_of<<Node3D>>)      obj.type = GDObjectTypeNode3D
-        elseIf (obj.instance_of<<Node2D>>)  obj.type = GDObjectTypeNode2D
-        elseIf (obj.instance_of<<Control>>) obj.type = GDObjectTypeControl
-        elseIf (obj.instance_of<<Node>>)    obj.type = GDObjectTypeNode
-        else                                obj.type = GDObjectTypeObject
-        type_lookup[ obj.class_name ] = obj.type   # cache result
-      endIf
-
-      return obj
+    method create( obj:GDObject )->Value
+      return Value( Boxed<<GDObject>>(obj) )
 
   METHODS
-    method call( gd_method_name:String, args=undefined:Value )->Value
-      local result = undefined
-      local gd_result : GDVariantPointer
-      local gd_variant : GDVariant
-      if (args.is_list)
-        local array_pointer : GDArrayPointer
-        native
-          @|if ($native_object.value)
-           |{
-           |  godot::StringName method_name( $gd_method_name->data->as_utf8 );
-           |  godot::Array args;
-           |  $array_pointer = ROGUE_COMPOUND(GDArrayPointer) { &args };
-              GDUtility.list_to_array( args, array_pointer )
-        native
-          @|  godot::Variant result = $native_object.value->callv( method_name, args );
-           |  $gd_result = ROGUE_COMPOUND(GDVariantPointer) { &result };
-              return GDUtility.variant_to_value( gd_result )
-        native
-          @|}
-      else
-        local variant_pointer : GDVariantPointer
-        native @|godot::Variant arg;
-                |$variant_pointer = ROGUE_COMPOUND(GDVariantPointer) { &arg };
-        GDUtility.value_to_variant( args, variant_pointer )
-        native
-          @|if ($native_object.value)
-           |{
-           |  godot::StringName method_name( $gd_method_name->data->as_utf8 );
-           |  godot::Variant result = $native_object.value->call( method_name, arg );
-           |  $gd_result = ROGUE_COMPOUND(GDVariantPointer) { &result };
-           |  $gd_variant = ROGUE_COMPOUND(GDVariant){ result };
-              trace gd_variant->Value
-              return GDUtility.variant_to_value( gd_result )
-        native
-          @|}
+    method to->GDObject
+      if (type == Value.TYPE_OBJECT)
+        if local boxed_obj = this->Object->(as Boxed<<GDObject>>)
+          return boxed_obj.value
+        endIf
       endIf
-      return result
+      return GDObject()
+endAugment
 
-    method class_name->String
-      local result : String
-      native @|if ($this.native_object.value)
-              |{
-              |  $result = RogueString_create( ((godot::String)$this.native_object.value->get_class()).utf8().get_data() );
-              |}
-      return result
-
-    method instance_of<<$GodotType>>->Logical
-      local result : Logical
-      native @|if ($this.native_object.value) $result = !!godot::Object::cast_to<godot::$GodotType>( $this.native_object.value );
-      return result
-
-    method operator?->Logical
-      return native_object.exists
-
-  #{
-  METHODS
-
-    method exists->Logical
-      return native("!!$this.value")->Logical
-
-    method texture( frame_name:String, index:Int32 )->GDObject
-      return query_object<<SpriteFrames,get_frame_texture>>( frame_name, index )
-
-    method has_method( name:String )->Logical
-      return query_logical<<has_method>>( name )
-
-    method instance_of<<$GodotType>>->Logical
-      local result : Logical
-      native @|if ($this.value) $result = !!godot::Object::cast_to<godot::$GodotType>( $this.value );
-      return result
-
-    method size->XY
-      return query_xy<<Texture2D,get_size>>
-
-    method invoke<<$GodotType,$method_name>>( value:Logical )
-      native @|if ($this.value)
-              |{
-              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
-              |  if (node) node->$method_name( $value );
-              |}
-
-    method invoke<<$method_name>>( new_value:GDObject )
-      native @|if ($this.value)
-              |{
-              |  if ($this.value) $this.value->$method_name( $new_value.value );
-              |}
-
-    method invoke<<$GodotType,$method_name>>( new_value:GDObject )
-      native @|if ($this.value)
-              |{
-              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
-              |  if (node) node->$method_name( $new_value.value );
-              |}
-
-    method invoke<<$GodotType,$method_name>>( value:Real )
-      if (not this) return
-      native @|if ($this.value)
-              |{
-              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
-              |  if (node) node->$method_name( $value );
-              |}
-
-    method invoke_with_string<<$method_name>>( arg:String )
-      native @|if ($this.value)
-              |{
-              |  godot::String arg( $arg->data->as_utf8 );
-              |  $this.value->$method_name( arg );
-              |}
-
-    method invoke_with_string_name<<$method_name>>( arg:String )
-      native @|if ($this.value)
-              |{
-              |  godot::StringName arg( $arg->data->as_utf8 );
-              |  $this.value->$method_name( arg );
-              |}
-
-    method invoke<<$GodotType,$method_name>>( xy:RealXY )
-      if (not this) return
-      native @|if ($this.value)
-              |{
-              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
-              |  if (node)
-              |  {
-              |    godot::Vector2 value( $xy.x, $xy.y );
-              |    node->$method_name( value );
-              |  }
-              |}
-
-    method invoke<<$GodotType,$method_name>>( xyz:XYZ )
-      if (not this) return
-      native @|if ($this.value)
-              |{
-              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
-              |  if (node)
-              |  {
-              |    godot::Vector3 value( $xyz.x, $xyz.y, $xyz.z );
-              |    node->$method_name( value );
-              |  }
-              |}
-
-    method query_int32<<$method_name>>()->Int32
-      local result : Int32
-      native @|if ($this.value) $result = $this.value->$method_name();
-      return result
-
-    method query_int32<<$GodotType,$method_name>>()->Int32
-      local result : Int32
-      native @|godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
-              |if (node) $result = node->$method_name();
-      return result
-
-    method query_logical<<$method_name>>( arg:String )->Logical
-      local result : Logical
-      native @|if ($this.value)
-              |{
-              |  godot::StringName arg( $arg->data->as_utf8 );
-              |  $result = $this.value->$method_name( arg );
-              |}
-      return result
-
-    method query_node<<$method_name>>()->GDObject
-      local result : GDObject
-      native @|if ($this.value) $result = ROGUE_COMPOUND(PlasmacoreGDObject) { $this.value->$method_name() };
-      return result
-
-    method query_object<<$GodotType,$method_name>>( name:String, value:Int32 )->GDObject
-      local result : GDObject
-      native @|if ($this.value)
-              |{
-              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
-              |  if (node)
-              |  {
-              |    godot::StringName string_name( $name->data->as_utf8 );
-              |    $result = ROGUE_COMPOUND(PlasmacoreGDObject) { node->$method_name( string_name, $value ).ptr() };
-              |  }
-              |}
-      return result
-
-    method query_realxy<<$GodotType,$method_name>>->RealXY
-      local result : RealXY
-      native @|if ($this.value)
-              |{
-              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
-              |  if (node)
-              |  {
-              |    godot::Vector2 v = node->$method_name();
-              |    $result = ROGUE_COMPOUND(GeometryRealXY) { v.x, v.y };
-              |  }
-              |}
-      return result
-
-    method query_string<<$method_name>>()->String
-      local result : String
-      native @|if ($this.value) $result = RogueString_create( ((godot::String)$this.value->$method_name()).utf8().get_data() );
-      return result
-
-    method query_xy<<$GodotType,$method_name>>->XY
-      local result : XY
-      native @|if ($this.value)
-              |{
-              |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
-              |  if (node)
-              |  {
-              |    godot::Vector2i v = node->$method_name();
-              |    $result = ROGUE_COMPOUND(GeometryXY) { v.x, v.y };
-              |  }
-              |}
-      return result
-      }#
-endClass
-}#

@@ -21,6 +21,9 @@ augment Rogue::GDVariant
         case Value.TYPE_XY
           local value = value->XY
           native @|$variant.value = godot::Vector2i($value.x,$value.y);
+        case Value.TYPE_REALXY
+          local value = value->RealXY
+          native @|$variant.value = godot::Vector2($value.x,$value.y);
         case Value.TYPE_BOX
           local value = value->Box
           native @|$variant.value = godot::Rect2i( $value.position.x, $value.position.y, $value.size.x, $value.size.y );
