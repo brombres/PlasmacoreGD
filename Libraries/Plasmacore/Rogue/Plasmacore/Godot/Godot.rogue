@@ -14,9 +14,7 @@ nativeHeader @|#include <godot_cpp/variant/utility_functions.hpp>
 
 $include Godot/ErrorLog
 $include Godot/Log
-$include Godot/GDNode
 $include Godot/GDObject
-$include Godot/GDObjectType
 $include Godot/GDVariant
 $include Godot/GDUtility
 

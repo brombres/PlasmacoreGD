@@ -19,6 +19,12 @@ endAugment
 
 augment Rogue::GDObject
   METHODS
+    method cloned->GDObject
+      return call<<"Node",duplicate>>
+
+    method add( child:GDObject )
+      call<<"Node",add_child>>( child )
+
     method call( method_name:String, args=undefined:Value )->Value
       if (not this) return undefined
 
@@ -26,20 +32,74 @@ augment Rogue::GDObject
       local v_args = GDVariant( args )
       return native( "ROGUE_COMPOUND(GDVariant){ $this.value->callv($v_name.value, $v_args.value) }" )->GDVariant->Value
 
-    method call_x<<$GodotType,$method_name>>->Value
-      local v_result : GDVariant
+    method class_name->String
+      return call<<"Object",get_class>>->String
 
-      native
-        @|if ($this.value)
-         |{
-         |  $GodotType* obj = godot::Object::cast_to<$GodotType>( $this.value );
-         |  if (obj)
-         |  {
-         |    $v_result.value = obj->$method_name();
-         |  }
-         |}
+    method count->Int32
+      return call<<"Node",get_child_count>>->String
 
-      return v_result->Value
+    method filepath->String
+      return call<<"Node",get_file_path>>
+
+    method get( index:Int32 )->GDObject
+      return call<<"Node",get_child>>( index )->GDObject
+
+    method get( node_path:String )->GDObject
+      return call<<"Node",get_node_or_null>>( node_path )->GDObject
+
+    method has_method( name:String )->Logical
+      return call<<"Object",has_method>>
+
+    method meta( name:String )->Value
+      return call<<"Object",get_meta>>( name )
+
+    method instance_of<<$GodotType>>->Logical
+      local result : Logical
+      native @|if ($this.value) $result = !!godot::Object::cast_to<godot::$GodotType>( $this.value );
+      return result
+
+    method last->GDObject
+      return this[ count - 1 ]
+
+    method name->String
+      return call<<"Node",get_name>>
+
+    method set_name( new_name:String )
+      call<<"Node",set_name>>( new_name )
+
+    method set_pixel_scale( scale:Real )
+      call<<"Sprite3D",set_pixel_size>>( scale )
+
+    method set_position( xy:XY )
+      call<<"Node2D",set_position>>( xy->RealXY )
+      call<<"Node3D",set_position>>( XYZ(xy,0) )
+
+    method set_position( xy:RealXY )
+      call<<"Node2D",set_position>>( xy )
+      call<<"Node3D",set_position>>( XYZ(xy,0) )
+
+    method set_rotation( radians:Radians )
+      call<<"Node2D",set_rotation>>( radians.value )
+      call<<"Node3D",set_rotation>>( XYZ(0,0,radians.value) )
+
+    method set_scale( scale:Real )
+      call<<"Node2D",set_scale>>( RealXY(scale,scale) )
+      call<<"Node3D",set_scale>>( XYZ(scale,scale,scale) )
+
+    method set_scale( scale:RealXY )
+      call<<"Node2D",set_scale>>( scale )
+      call<<"Node3D",set_scale>>( XYZ(scale,1.0) )
+
+    method set_visible( setting:Logical )
+      call<<"Node2D",set_visible>>( setting )
+      call<<"Node3D",set_visible>>( setting )
+
+    method sprite_frames->GDObject
+      return query_object<<AnimatedSprite2D,get_sprite_frames>>
+
+
+    method to->String
+      return name
 
     method call<<$GodotType,$method_name>>->Value
       local v_result : GDVariant
@@ -67,6 +127,23 @@ augment Rogue::GDObject
          |  if (obj)
          |  {
          |    $v_result.value = obj->$method_name( $v_arg.value );
+         |  }
+         |}
+
+      return v_result->Value
+
+    method call<<$GodotType,$method_name>>( arg1:Value, arg2:Value )->Value
+      local v_result : GDVariant
+      local v_arg1 = GDVariant( arg1 )
+      local v_arg2 = GDVariant( arg2 )
+
+      native
+        @|if ($this.value)
+         |{
+         |  godot::$GodotType* obj = godot::Object::cast_to<godot::$GodotType>( $this.value );
+         |  if (obj)
+         |  {
+         |    $v_result.value = obj->$method_name( $v_arg1.value, $v_arg2.value );
          |  }
          |}
 

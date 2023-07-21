@@ -2,7 +2,7 @@ module Plasmacore
 
 class Drawable
   PROPERTIES
-    node : GDNode
+    node : GDObject
 
   METHODS
     method init( name:String )

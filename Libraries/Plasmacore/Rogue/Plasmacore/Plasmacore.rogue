@@ -34,18 +34,13 @@ class Plasmacore [essential api singleton]
       endIf
 
     method on_new_scene( mode:Int32, gd_root_node, gd_config_node )
-      trace gd_root_node( "get_class" )
-      trace gd_config_node.call<<"Object",get_class>>
-      trace gd_root_node( "get_child_count" )
-      trace gd_root_node.call<<Node,get_child_count>>
-
       is_2dx = (mode == 1)
       is_2d = (mode == 2)
       is_3d = (mode == 3)
 
-      #gd_scene_node  = gd_root_node.last
-      #gd_assets_node = gd_config_node//Assets
-      #if (gd_assets_node) gd_drawables_node = gd_assets_node//Drawables
+      gd_scene_node  = gd_root_node.last
+      gd_assets_node = gd_config_node//Assets
+      if (gd_assets_node) gd_drawables_node = gd_assets_node//Drawables
 
       #drawable = Drawable( "Sand" )
       #drawable.node( "set_variation", 7 )
