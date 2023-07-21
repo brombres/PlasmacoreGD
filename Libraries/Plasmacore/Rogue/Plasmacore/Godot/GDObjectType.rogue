@@ -1,0 +1,22 @@
+module Plasmacore
+
+class GDObjectType
+endClass
+
+class GDObjectTypeObject : GDObjectType [singleton]
+endClass
+
+class GDObjectTypeNode : GDObjectTypeObject [singleton]
+endClass
+
+class GDObjectTypeCanvasItem : GDObjectTypeNode [singleton]
+endClass
+
+class GDObjectTypeControl : GDObjectTypeCanvasItem [singleton]
+endClass
+
+class GDObjectTypeNode2D : GDObjectTypeCanvasItem [singleton]
+endClass
+
+class GDObjectTypeNode3D : GDObjectTypeNode2D [singleton]
+endClass

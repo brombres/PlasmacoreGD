@@ -6,6 +6,7 @@ class Drawable
 
   METHODS
     method init( name:String )
+      #{
       contingent
         if (Plasmacore.gd_drawables) node = Plasmacore.gd_drawables[name]
         sufficient (node)
@@ -43,8 +44,10 @@ class Drawable
 
     method cloned->Drawable
       return Drawable( node.cloned )
+}#
 
     method draw( position:RealXY, scale=RealXY(1,1):RealXY, rotation=Radians(0):Radians )
+#{
       if (Plasmacore.is_2dx)
         node.position = RealXY( position.x, Display.size.y - position.y )
       else
@@ -52,5 +55,6 @@ class Drawable
       endIf
       node.scale = scale
       node.rotation = rotation.value
+}#
 
 endClass

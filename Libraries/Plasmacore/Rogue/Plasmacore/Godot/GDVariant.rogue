@@ -1,0 +1,264 @@
+module Plasmacore
+
+nativeType<<"godot::Variant">> GDVariant
+
+augment Rogue::GDVariant
+  GLOBAL METHODS
+    method create( value:Value )->GDVariant
+      local variant : GDVariant
+      which (value.type)
+        case Value.TYPE_UNDEFINED, Value.TYPE_NULL, Value.TYPE_OBJECT
+          noAction
+        case Value.TYPE_BYTE, Value.TYPE_CHARACTER, Value.TYPE_INT32, Value.TYPE_INT64
+          local value = value->Int32
+          native @|$variant.value = $value;
+        case Value.TYPE_REAL32, Value.TYPE_REAL64
+          local value = value->Real64
+          native @|$variant.value = $value;
+        case Value.TYPE_LOGICAL
+          if (value->Logical) native @|$variant.value = (bool) 1;
+          else                native @|$variant.value = (bool) 0;
+        case Value.TYPE_XY
+          local value = value->XY
+          native @|$variant.value = godot::Vector2i($value.x,$value.y);
+        case Value.TYPE_BOX
+          local value = value->Box
+          native @|$variant.value = godot::Rect2i( $value.position.x, $value.position.y, $value.size.x, $value.size.y );
+        case Value.TYPE_STRING
+          local value = value->String
+          native @|godot::String st( $value->data->as_utf8 );
+                  |$variant.value = st;
+        case Value.TYPE_LIST
+          variant = create<<Array>>
+          variant.add( GDVariant(forEach in value) )
+        case Value.TYPE_TABLE
+          variant = create<<Dictionary>>
+          forEach (entry in value.entries)
+            variant[ GDVariant(Value(entry.key)) ] = GDVariant( entry.value )
+          endForEach
+      endWhich
+
+      return variant
+
+    method create<<$GodotType>>->GDVariant
+      return native( "ROGUE_COMPOUND(GDVariant){ godot::$GodotType() }" )->GDVariant
+
+
+  METHODS
+    method add( variant:GDVariant )
+      if (this.is_array)
+        native @|((godot::Array)($this.value)).push_back( $variant.value );
+      endIf
+
+    method count->Int32
+      if (this.is_string)
+        return native("((godot::String)$this.value).length()")->Int32
+      elseIf (this.is_array)
+        return native("((godot::Array)($this.value)).size()")->Int32
+      else
+        return 0
+      endIf
+
+    method get( index:Int32 )->GDVariant
+      if (this.is_array)
+        return native("ROGUE_COMPOUND(GDVariant){ ((godot::Array)($this.value))[$index] }")->GDVariant
+      else
+        return $defaultValue<<GDVariant>>
+      endIf
+
+    method get( key:String )->GDVariant
+      if (this.is_dictionary)
+        local v_key = GDVariant( key )
+        return native("ROGUE_COMPOUND(GDVariant){ ((godot::Dictionary)($this.value))[$v_key.value] }")->GDVariant
+      else
+        return $defaultValue<<GDVariant>>
+      endIf
+
+    method is_array->Logical
+      which ( native("(RogueInt32) $this.value.get_type()")->Int32 )
+        case native("godot::Variant::Type::ARRAY")->LiteralInt32,
+             native("godot::Variant::Type::PACKED_BYTE_ARRAY")->LiteralInt32,
+             native("godot::Variant::Type::PACKED_INT32_ARRAY")->LiteralInt32,
+             native("godot::Variant::Type::PACKED_INT64_ARRAY")->LiteralInt32,
+             native("godot::Variant::Type::PACKED_FLOAT32_ARRAY")->LiteralInt32,
+             native("godot::Variant::Type::PACKED_FLOAT64_ARRAY")->LiteralInt32,
+             native("godot::Variant::Type::PACKED_STRING_ARRAY")->LiteralInt32,
+             native("godot::Variant::Type::PACKED_VECTOR2_ARRAY")->LiteralInt32,
+             native("godot::Variant::Type::PACKED_VECTOR3_ARRAY")->LiteralInt32,
+             native("godot::Variant::Type::PACKED_COLOR_ARRAY")->LiteralInt32
+          return true
+        others
+          return false
+      endWhich
+
+    method is_dictionary->Logical
+      which ( native("(RogueInt32) $this.value.get_type()")->Int32 )
+        case native("godot::Variant::Type::DICTIONARY")->LiteralInt32
+          return true
+        others
+          return false
+      endWhich
+
+    method is_string->Logical
+      which ( native("(RogueInt32) $this.value.get_type()")->Int32 )
+        case native("godot::Variant::Type::STRING")->LiteralInt32,
+             native("godot::Variant::Type::STRING_NAME")->LiteralInt32,
+             native("godot::Variant::Type::NODE_PATH")->LiteralInt32
+          return true
+        others
+          return false
+      endWhich
+
+    method keys->GDVariant
+      which ( native("(RogueInt32) $this.value.get_type()")->Int32 )
+        case native("godot::Variant::Type::DICTIONARY")->LiteralInt32
+          return native("ROGUE_COMPOUND(GDVariant){ ((godot::Dictionary)($this.value)).keys() }")->GDVariant
+        others
+          return $defaultValue<<GDVariant>>
+      endWhich
+
+    method set( key:String, variant:GDVariant )
+      if (this.is_dictionary)
+        local v_key = GDVariant( key )
+        native @|((godot::Dictionary)($this.value))[$v_key.value] = $variant.value;
+      endIf
+
+    method to->Int32
+      return this->Value->Int32
+
+    method to->Int64
+      return this->Value->Int64
+
+    method to->Logical
+      return this->Value->Logical
+
+    method to->Real32
+      return this->Value->Real32
+
+    method to->Real64
+      return this->Value->Real64
+
+    method to->String
+      return this->Value->String
+
+    method to->Value
+      which ( native("(RogueInt32) $this.value.get_type()")->Int32 )
+        case native("godot::Variant::Type::NIL")->LiteralInt32
+          return undefined
+
+        case native("godot::Variant::Type::BOOL")->LiteralInt32
+          return native("(bool)($this.value)")->Logical
+
+        case native("godot::Variant::Type::INT")->LiteralInt32,
+             native("godot::Variant::Type::RID")->LiteralInt32
+          local int64 = native("(int64_t)($this.value)")->Int64
+          if (int64->Int32 == int64) return int64->Int32
+          return int64
+
+        case native("godot::Variant::Type::FLOAT")->LiteralInt32
+          return native("(double)($this.value)")->Real64
+
+        case native("godot::Variant::Type::STRING")->LiteralInt32,
+             native("godot::Variant::Type::STRING_NAME")->LiteralInt32,
+             native("godot::Variant::Type::NODE_PATH")->LiteralInt32
+          return native("RogueString_create( ((godot::String)$this.value).utf8().get_data() )")->String
+
+        case native("godot::Variant::Type::VECTOR2")->LiteralInt32
+          local result : RealXY
+          native @|godot::Vector2 v = $this.value;
+                  |$result.x = v.x;
+                  |$result.y = v.y;
+          return result
+
+        case native("godot::Variant::Type::VECTOR2I")->LiteralInt32
+          local result : XY
+          native @|godot::Vector2i v = $this.value;
+                  |$result.x = v.x;
+                  |$result.y = v.y;
+          return result
+
+        case native("godot::Variant::Type::RECT2")->LiteralInt32
+          local result : Box
+          native @|godot::Rect2 r = $this.value;
+                  |$result.position.x = (RogueInt32) r.position.x;
+                  |$result.position.y = (RogueInt32) r.position.y;
+                  |$result.size.x = (RogueInt32) r.size.x;
+                  |$result.size.y = (RogueInt32) r.size.y;
+          return result
+
+        case native("godot::Variant::Type::RECT2I")->LiteralInt32
+          local result : Box
+          native @|godot::Rect2i r = $this.value;
+                  |$result.position.x = r.position.x;
+                  |$result.position.y = r.position.y;
+                  |$result.size.x = r.size.x;
+                  |$result.size.y = r.size.y;
+          return result
+
+        case native("godot::Variant::Type::VECTOR3")->LiteralInt32,
+             native("godot::Variant::Type::VECTOR3I")->LiteralInt32
+          local result : XYZ
+          native @|godot::Vector3 v = $this.value;
+                  |$result.x = v.x;
+                  |$result.y = v.y;
+                  |$result.z = v.z;
+          return result
+
+        # case godot::Variant::Type::TRANSFORM2D:
+        # case godot::Variant::Type::VECTOR4:
+        # case godot::Variant::Type::VECTOR4I:
+        # case godot::Variant::Type::PLANE:
+        # case godot::Variant::Type::QUATERNION:
+        # case godot::Variant::Type::AABB:
+        # case godot::Variant::Type::BASIS:
+        # case godot::Variant::Type::TRANSFORM3D:
+        # case godot::Variant::Type::PROJECTION:
+
+        case native("godot::Variant::Type::COLOR")->LiteralInt32
+          return native("((godot::Color)($this.value)).to_argb32()")->Int32
+
+        # case godot::Variant::Type::OBJECT:
+        # case godot::Variant::Type::CALLABLE:
+        # case godot::Variant::Type::SIGNAL:
+
+        case native("godot::Variant::Type::DICTIONARY")->LiteralInt32
+          localize keys
+          local table = @{}
+          forEach (key in keys)
+            table[ key->String ] = this[key]->Value
+          endForEach
+          return table
+
+        case native("godot::Variant::Type::ARRAY")->LiteralInt32,
+             native("godot::Variant::Type::PACKED_BYTE_ARRAY")->LiteralInt32,
+             native("godot::Variant::Type::PACKED_INT32_ARRAY")->LiteralInt32,
+             native("godot::Variant::Type::PACKED_INT64_ARRAY")->LiteralInt32,
+             native("godot::Variant::Type::PACKED_FLOAT32_ARRAY")->LiteralInt32,
+             native("godot::Variant::Type::PACKED_FLOAT64_ARRAY")->LiteralInt32,
+             native("godot::Variant::Type::PACKED_STRING_ARRAY")->LiteralInt32,
+             native("godot::Variant::Type::PACKED_VECTOR2_ARRAY")->LiteralInt32,
+             native("godot::Variant::Type::PACKED_VECTOR3_ARRAY")->LiteralInt32,
+             native("godot::Variant::Type::PACKED_COLOR_ARRAY")->LiteralInt32
+           local list = Value[]( this.count )
+           list.add( (forEach in this)->Value )
+           return Value( list )
+
+        case native("godot::Variant::Type::VARIANT_MAX")->LiteralInt32
+          return undefined
+
+        others
+          trace "TODO"
+          return undefined
+      endWhich
+
+      return undefined
+
+    method values->GDVariant
+      which ( native("(RogueInt32) $this.value.get_type()")->Int32 )
+        case native("godot::Variant::Type::DICTIONARY")->LiteralInt32
+          return native("ROGUE_COMPOUND(GDVariant){ ((godot::Dictionary)($this.value)).values() }")->GDVariant
+        others
+          return $defaultValue<<GDVariant>>
+      endWhich
+
+endAugment

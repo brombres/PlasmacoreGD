@@ -1,6 +1,7 @@
 module Plasmacore
 
 nativeHeader @|#include <godot_cpp/classes/animated_sprite2d.hpp>
+nativeHeader @|#include <godot_cpp/classes/control.hpp>
 nativeHeader @|#include <godot_cpp/classes/node.hpp>
 nativeHeader @|#include <godot_cpp/classes/node2d.hpp>
 nativeHeader @|#include <godot_cpp/classes/node3d.hpp>
@@ -15,5 +16,7 @@ $include Godot/ErrorLog
 $include Godot/Log
 $include Godot/GDNode
 $include Godot/GDObject
+$include Godot/GDObjectType
+$include Godot/GDVariant
 $include Godot/GDUtility
 

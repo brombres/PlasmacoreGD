@@ -9,18 +9,18 @@ $include Plasmacore/Drawable
 
 class Plasmacore [essential api singleton]
   PROPERTIES
-    gd_root      : GDNode
-    gd_scene     : GDNode
-    gd_config    : GDNode
-    gd_assets    : GDNode
-    gd_drawables : GDNode
+    gd_root_node      : GDObject
+    gd_scene_node     : GDObject
+    gd_config_node    : GDObject
+    gd_assets_node    : GDObject
+    gd_drawables_node : GDObject
 
     is_2d  : Logical
     is_2dx : Logical
     is_3d  : Logical
 
     drawable : Drawable
-    d2 : Drawable
+    #d2 : Drawable
 
   METHODS
     method init
@@ -30,31 +30,32 @@ class Plasmacore [essential api singleton]
     method draw
       if (drawable)
         drawable.draw( XY(100,100) )
-        d2.draw( XY(300,100) )
+        #d2.draw( XY(300,100) )
       endIf
 
-    method on_new_scene( mode:Int32, gd_root, gd_config )
+    method on_new_scene( mode:Int32, native_root:NativeGDObject, native_config:NativeGDObject )
+      gd_root_node = GDObject( native_root )
+      gd_config_node = GDObject( native_config )
+
+      trace gd_root_node.class_name
+      trace gd_config_node.class_name
+      trace gd_root_node( "get_child_count" )
+
       is_2dx = (mode == 1)
       is_2d = (mode == 2)
       is_3d = (mode == 3)
 
-      gd_scene  = gd_root.last
-      gd_assets = gd_config//Assets
-      if (gd_assets) gd_drawables = gd_assets//Drawables
+      #gd_scene_node  = gd_root_node.last
+      #gd_assets_node = gd_config_node//Assets
+      #if (gd_assets_node) gd_drawables_node = gd_assets_node//Drawables
 
-      drawable = Drawable( "Sand" )
-      drawable.node( "set_variation", 7 )
+      #drawable = Drawable( "Sand" )
+      #drawable.node( "set_variation", 7 )
 
-      d2 = drawable.cloned
+      #d2 = drawable.cloned
 
     method on_update( dt:Real64, display_size:XY )
       Display.size = display_size
-
-      if (gd_scene.name != "Testing")
-        trace gd_scene
-        gd_scene.name = "Testing"
-        trace gd_scene
-      endIf
 
       draw
 endClass

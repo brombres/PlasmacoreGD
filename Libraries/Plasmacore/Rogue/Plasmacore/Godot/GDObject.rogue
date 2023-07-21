@@ -1,28 +1,53 @@
 module Plasmacore
 
-class GDObject [compound]
-  GLOBAL METHODS
-    method operator?( obj:GDObject )->Logical
-      return obj.exists
+NATIVE_POINTER_TYPE<<NativeGDObject, "godot::Object*">>
 
-  PROPERTIES
-    native "godot::Object* value;"
+class GDObject( native_object:NativeGDObject, type:GDObjectType ) [compound]
+  GLOBAL PROPERTIES
+    type_lookup    : [String:GDObjectType]
+
+  GLOBAL METHODS
+    method create( native_object:NativeGDObject )->GDObject
+      if (not type_lookup)
+        type_lookup = [String:GDObjectType]
+        type_lookup//CanvasItem = GDObjectTypeCanvasItem
+        type_lookup//Control    = GDObjectTypeControl
+        type_lookup//Node       = GDObjectTypeNode
+        type_lookup//Node2D     = GDObjectTypeNode2D
+        type_lookup//Node3D     = GDObjectTypeNode3D
+        type_lookup//Object     = GDObjectTypeObject
+      endIf
+
+      local obj = GDObject( native_object, null )
+      obj.type = type_lookup[ obj.class_name ]
+
+      if (not obj.type)
+        if (obj.instance_of<<Node3D>>)      obj.type = GDObjectTypeNode3D
+        elseIf (obj.instance_of<<Node2D>>)  obj.type = GDObjectTypeNode2D
+        elseIf (obj.instance_of<<Control>>) obj.type = GDObjectTypeControl
+        elseIf (obj.instance_of<<Node>>)    obj.type = GDObjectTypeNode
+        else                                obj.type = GDObjectTypeObject
+        type_lookup[ obj.class_name ] = obj.type   # cache result
+      endIf
+
+      return obj
 
   METHODS
     method call( gd_method_name:String, args=undefined:Value )->Value
       local result = undefined
       local gd_result : GDVariantPointer
+      local gd_variant : GDVariant
       if (args.is_list)
         local array_pointer : GDArrayPointer
         native
-          @|if ($this.value)
+          @|if ($native_object.value)
            |{
            |  godot::StringName method_name( $gd_method_name->data->as_utf8 );
            |  godot::Array args;
            |  $array_pointer = ROGUE_COMPOUND(GDArrayPointer) { &args };
               GDUtility.list_to_array( args, array_pointer )
         native
-          @|  godot::Variant result = $this.value->callv( method_name, args );
+          @|  godot::Variant result = $native_object.value->callv( method_name, args );
            |  $gd_result = ROGUE_COMPOUND(GDVariantPointer) { &result };
               return GDUtility.variant_to_value( gd_result )
         native
@@ -33,16 +58,37 @@ class GDObject [compound]
                 |$variant_pointer = ROGUE_COMPOUND(GDVariantPointer) { &arg };
         GDUtility.value_to_variant( args, variant_pointer )
         native
-          @|if ($this.value)
+          @|if ($native_object.value)
            |{
            |  godot::StringName method_name( $gd_method_name->data->as_utf8 );
-           |  godot::Variant result = $this.value->call( method_name, arg );
+           |  godot::Variant result = $native_object.value->call( method_name, arg );
            |  $gd_result = ROGUE_COMPOUND(GDVariantPointer) { &result };
+           |  $gd_variant = ROGUE_COMPOUND(GDVariant){ result };
+              trace gd_variant->Value
               return GDUtility.variant_to_value( gd_result )
         native
           @|}
       endIf
       return result
+
+    method class_name->String
+      local result : String
+      native @|if ($this.native_object.value)
+              |{
+              |  $result = RogueString_create( ((godot::String)$this.native_object.value->get_class()).utf8().get_data() );
+              |}
+      return result
+
+    method instance_of<<$GodotType>>->Logical
+      local result : Logical
+      native @|if ($this.native_object.value) $result = !!godot::Object::cast_to<godot::$GodotType>( $this.native_object.value );
+      return result
+
+    method operator?->Logical
+      return native_object.exists
+
+  #{
+  METHODS
 
     method exists->Logical
       return native("!!$this.value")->Logical
@@ -195,4 +241,5 @@ class GDObject [compound]
               |  }
               |}
       return result
+      }#
 endClass
