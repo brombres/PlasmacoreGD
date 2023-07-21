@@ -7,7 +7,7 @@ augment Rogue::GDVariant
     method create( value:Value )->GDVariant
       local variant : GDVariant
       which (value.type)
-        case Value.TYPE_UNDEFINED, Value.TYPE_NULL, Value.TYPE_OBJECT
+        case Value.TYPE_UNDEFINED, Value.TYPE_NULL
           noAction
         case Value.TYPE_BYTE, Value.TYPE_CHARACTER, Value.TYPE_INT32, Value.TYPE_INT64
           local value = value->Int32
@@ -36,6 +36,11 @@ augment Rogue::GDVariant
           forEach (entry in value.entries)
             variant[ GDVariant(Value(entry.key)) ] = GDVariant( entry.value )
           endForEach
+        case Value.TYPE_OBJECT
+          local obj = value->Object
+          if local boxed_obj = obj->(as Boxed<<GDObject>>)
+            native @|$variant.value = $boxed_obj->value.value;
+          endIf
       endWhich
 
       return variant
@@ -99,6 +104,14 @@ augment Rogue::GDVariant
           return false
       endWhich
 
+    method is_object->Logical
+      which ( native("(RogueInt32) $this.value.get_type()")->Int32 )
+        case native("godot::Variant::Type::OBJECT")->LiteralInt32
+          return true
+        others
+          return false
+      endWhich
+
     method is_string->Logical
       which ( native("(RogueInt32) $this.value.get_type()")->Int32 )
         case native("godot::Variant::Type::STRING")->LiteralInt32,
@@ -121,6 +134,13 @@ augment Rogue::GDVariant
       if (this.is_dictionary)
         local v_key = GDVariant( key )
         native @|((godot::Dictionary)($this.value))[$v_key.value] = $variant.value;
+      endIf
+
+    method to->GDObject
+      if (this.is_object)
+        return native( "ROGUE_COMPOUND(GDObject){ (godot::Object*)($this.value) }" )->GDObject
+      else
+        return GDObject()
       endIf
 
     method to->Int32
@@ -217,7 +237,10 @@ augment Rogue::GDVariant
         case native("godot::Variant::Type::COLOR")->LiteralInt32
           return native("((godot::Color)($this.value)).to_argb32()")->Int32
 
-        # case godot::Variant::Type::OBJECT:
+        case native("godot::Variant::Type::OBJECT")->LiteralInt32
+          local obj = native( "ROGUE_COMPOUND(GDObject){ (godot::Object*)($this.value) }" )->GDObject
+          return Value( Boxed<<GDObject>>(obj) )
+
         # case godot::Variant::Type::CALLABLE:
         # case godot::Variant::Type::SIGNAL:
 

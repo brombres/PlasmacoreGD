@@ -30,6 +30,12 @@ routine rogo_build
 	sync_products
 endRoutine
 
+routine rogo_rebuild
+  rogo_compile_rogue
+	subrogo( "build skip_sync w=$"(Console.width) )
+	sync_products
+endRoutine
+
 routine rogo_build_rogue
   local source = Files(".")
   source.add( "Source/**/*.rogue" )

@@ -1,5 +1,80 @@
 module Plasmacore
 
+ROGUE_NATIVE_POINTER_TYPE<<"godot::Object*",GDObject>>
+
+augment Rogue::Value
+  GLOBAL METHODS
+    method create( obj:GDObject )->Value
+      return Value( Boxed<<GDObject>>(obj) )
+
+  METHODS
+    method to->GDObject
+      if (type == Value.TYPE_OBJECT)
+        if local boxed_obj = this->Object->(as Boxed<<GDObject>>)
+          return boxed_obj.value
+        endIf
+      endIf
+      return GDObject()
+endAugment
+
+augment Rogue::GDObject
+  METHODS
+    method call( method_name:String, args=undefined:Value )->Value
+      if (not this) return undefined
+
+      local v_name = GDVariant( method_name )
+      local v_args = GDVariant( args )
+      return native( "ROGUE_COMPOUND(GDVariant){ $this.value->callv($v_name.value, $v_args.value) }" )->GDVariant->Value
+
+    method call_x<<$GodotType,$method_name>>->Value
+      local v_result : GDVariant
+
+      native
+        @|if ($this.value)
+         |{
+         |  $GodotType* obj = godot::Object::cast_to<$GodotType>( $this.value );
+         |  if (obj)
+         |  {
+         |    $v_result.value = obj->$method_name();
+         |  }
+         |}
+
+      return v_result->Value
+
+    method call<<$GodotType,$method_name>>->Value
+      local v_result : GDVariant
+
+      native
+        @|if ($this.value)
+         |{
+         |  godot::$GodotType* obj = godot::Object::cast_to<godot::$GodotType>( $this.value );
+         |  if (obj)
+         |  {
+         |    $v_result.value = obj->$method_name();
+         |  }
+         |}
+
+      return v_result->Value
+
+    method call<<$GodotType,$method_name>>( arg:Value )->Value
+      local v_result : GDVariant
+      local v_arg = GDVariant( arg )
+
+      native
+        @|if ($this.value)
+         |{
+         |  godot::$GodotType* obj = godot::Object::cast_to<godot::$GodotType>( $this.value );
+         |  if (obj)
+         |  {
+         |    $v_result.value = obj->$method_name( $v_arg.value );
+         |  }
+         |}
+
+      return v_result->Value
+
+endAugment
+
+  #{
 NATIVE_POINTER_TYPE<<NativeGDObject, "godot::Object*">>
 
 class GDObject( native_object:NativeGDObject, type:GDObjectType ) [compound]
@@ -243,3 +318,4 @@ class GDObject( native_object:NativeGDObject, type:GDObjectType ) [compound]
       return result
       }#
 endClass
+}#

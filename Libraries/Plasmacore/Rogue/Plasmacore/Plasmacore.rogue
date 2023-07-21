@@ -33,13 +33,11 @@ class Plasmacore [essential api singleton]
         #d2.draw( XY(300,100) )
       endIf
 
-    method on_new_scene( mode:Int32, native_root:NativeGDObject, native_config:NativeGDObject )
-      gd_root_node = GDObject( native_root )
-      gd_config_node = GDObject( native_config )
-
-      trace gd_root_node.class_name
-      trace gd_config_node.class_name
+    method on_new_scene( mode:Int32, gd_root_node, gd_config_node )
+      trace gd_root_node( "get_class" )
+      trace gd_config_node.call<<"Object",get_class>>
       trace gd_root_node( "get_child_count" )
+      trace gd_root_node.call<<Node,get_child_count>>
 
       is_2dx = (mode == 1)
       is_2d = (mode == 2)
