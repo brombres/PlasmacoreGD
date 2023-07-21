@@ -26,8 +26,8 @@ void NativePlasmacore::on_new_scene( int mode, Node* root, Node* config )
 	PlasmacorePlasmacore__on_new_scene__RogueInt32_PlasmacoreGDNode_PlasmacoreGDNode(
       ROGUE_SINGLETON(PlasmacorePlasmacore),
       mode,
-      (PlasmacoreGDNode){root},
-      (PlasmacoreGDNode){config}
+      ROGUE_COMPOUND(PlasmacoreGDNode){root},
+      ROGUE_COMPOUND(PlasmacoreGDNode){config}
   );
 }
 
@@ -35,7 +35,7 @@ void NativePlasmacore::on_update( double dt, Vector2 display_size )
 {
   if ( !Engine::get_singleton()->is_editor_hint() )
   {
-    GeometryXY size = (GeometryXY){ (RogueInt32)display_size.x, (RogueInt32)display_size.y };
+    GeometryXY size = ROGUE_COMPOUND(GeometryXY){ (RogueInt32)display_size.x, (RogueInt32)display_size.y };
     PlasmacorePlasmacore__on_update__RogueReal64_GeometryXY( ROGUE_SINGLETON(PlasmacorePlasmacore), dt, size );
     Rogue_check_gc();
   }

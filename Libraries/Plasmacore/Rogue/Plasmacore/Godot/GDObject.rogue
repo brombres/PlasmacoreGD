@@ -19,25 +19,25 @@ class GDObject [compound]
            |{
            |  godot::StringName method_name( $gd_method_name->data->as_utf8 );
            |  godot::Array args;
-           |  $array_pointer = (GDArrayPointer){ &args };
+           |  $array_pointer = ROGUE_COMPOUND(GDArrayPointer) { &args };
               GDUtility.list_to_array( args, array_pointer )
         native
           @|  godot::Variant result = $this.value->callv( method_name, args );
-           |  $gd_result = (GDVariantPointer){ &result };
+           |  $gd_result = ROGUE_COMPOUND(GDVariantPointer) { &result };
               return GDUtility.variant_to_value( gd_result )
         native
           @|}
       else
         local variant_pointer : GDVariantPointer
         native @|godot::Variant arg;
-                |$variant_pointer = (GDVariantPointer){ &arg };
+                |$variant_pointer = ROGUE_COMPOUND(GDVariantPointer) { &arg };
         GDUtility.value_to_variant( args, variant_pointer )
         native
           @|if ($this.value)
            |{
            |  godot::StringName method_name( $gd_method_name->data->as_utf8 );
            |  godot::Variant result = $this.value->call( method_name, arg );
-           |  $gd_result = (GDVariantPointer){ &result };
+           |  $gd_result = ROGUE_COMPOUND(GDVariantPointer) { &result };
               return GDUtility.variant_to_value( gd_result )
         native
           @|}
@@ -149,7 +149,7 @@ class GDObject [compound]
 
     method query_node<<$method_name>>()->GDObject
       local result : GDObject
-      native @|if ($this.value) $result = (PlasmacoreGDObject){ $this.value->$method_name() };
+      native @|if ($this.value) $result = ROGUE_COMPOUND(PlasmacoreGDObject) { $this.value->$method_name() };
       return result
 
     method query_object<<$GodotType,$method_name>>( name:String, value:Int32 )->GDObject
@@ -160,7 +160,7 @@ class GDObject [compound]
               |  if (node)
               |  {
               |    godot::StringName string_name( $name->data->as_utf8 );
-              |    $result = (PlasmacoreGDObject){ node->$method_name( string_name, $value ).ptr() };
+              |    $result = ROGUE_COMPOUND(PlasmacoreGDObject) { node->$method_name( string_name, $value ).ptr() };
               |  }
               |}
       return result
@@ -173,7 +173,7 @@ class GDObject [compound]
               |  if (node)
               |  {
               |    godot::Vector2 v = node->$method_name();
-              |    $result = (GeometryRealXY){ v.x, v.y };
+              |    $result = ROGUE_COMPOUND(GeometryRealXY) { v.x, v.y };
               |  }
               |}
       return result
@@ -191,7 +191,7 @@ class GDObject [compound]
               |  if (node)
               |  {
               |    godot::Vector2i v = node->$method_name();
-              |    $result = (GeometryXY){ v.x, v.y };
+              |    $result = ROGUE_COMPOUND(GeometryXY) { v.x, v.y };
               |  }
               |}
       return result

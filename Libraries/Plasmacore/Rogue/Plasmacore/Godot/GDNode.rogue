@@ -4,7 +4,7 @@ class GDNode [compound]
   GLOBAL METHODS
     method create<<$ClassName>>->GDNode
       local result : GDNode
-      native @|$result = (PlasmacoreGDNode){ memnew(godot::$ClassName) };
+      native @|$result = ROGUE_COMPOUND(PlasmacoreGDNode) { memnew(godot::$ClassName) };
       return result
 
     method operator?( obj:GDNode )->Logical
@@ -30,25 +30,25 @@ class GDNode [compound]
            |{
            |  godot::StringName method_name( $gd_method_name->data->as_utf8 );
            |  godot::Array args;
-           |  $array_pointer = (GDArrayPointer){ &args };
+           |  $array_pointer = ROGUE_COMPOUND(GDArrayPointer) { &args };
               GDUtility.list_to_array( args, array_pointer )
         native
           @|  godot::Variant result = $this.value->callv( method_name, args );
-           |  $gd_result = (GDVariantPointer){ &result };
+           |  $gd_result = ROGUE_COMPOUND(GDVariantPointer) { &result };
               return GDUtility.variant_to_value( gd_result )
         native
           @|}
       else
         local variant_pointer : GDVariantPointer
         native @|godot::Variant arg;
-                |$variant_pointer = (GDVariantPointer){ &arg };
+                |$variant_pointer = ROGUE_COMPOUND(GDVariantPointer) { &arg };
         GDUtility.value_to_variant( args, variant_pointer )
         native
           @|if ($this.value)
            |{
            |  godot::StringName method_name( $gd_method_name->data->as_utf8 );
            |  godot::Variant result = $this.value->call( method_name, arg );
-           |  $gd_result = (GDVariantPointer){ &result };
+           |  $gd_result = ROGUE_COMPOUND(GDVariantPointer) { &result };
               return GDUtility.variant_to_value( gd_result )
         native
           @|}
@@ -72,14 +72,14 @@ class GDNode [compound]
 
     method get( index:Int32 )->GDNode
       local result : GDNode
-      native @|if ($this.value) $result = (PlasmacoreGDNode){ $this.value->get_child($index) };
+      native @|if ($this.value) $result = ROGUE_COMPOUND(PlasmacoreGDNode) { $this.value->get_child($index) };
       return result
 
     method get( node_path:String )->GDNode
       local result : GDNode
       if (this.exists)
         native @|godot::NodePath path( $node_path->data->as_utf8 );
-                |$result = (PlasmacoreGDNode){ $this.value->get_node_or_null( path ) };
+                |$result = ROGUE_COMPOUND(PlasmacoreGDNode) { $this.value->get_node_or_null( path ) };
       endIf
       return result
 
@@ -206,12 +206,12 @@ class GDNode [compound]
 
     method query_node<<$method_name>>()->GDNode
       local result : GDNode
-      native @|if ($this.value) $result = (PlasmacoreGDNode){ $this.value->$method_name() };
+      native @|if ($this.value) $result = ROGUE_COMPOUND(PlasmacoreGDNode) { $this.value->$method_name() };
       return result
 
     method query_object<<$method_name>>()->GDObject
       local result : GDObject
-      native @|if ($this.value) $result = (PlasmacoreGDObject){ $this.value->$method_name().ptr() };
+      native @|if ($this.value) $result = ROGUE_COMPOUND(PlasmacoreGDObject) { $this.value->$method_name().ptr() };
       return result
 
     method query_object<<$GodotType,$method_name>>->GDObject
@@ -221,7 +221,7 @@ class GDNode [compound]
               |  godot::$GodotType* node = godot::Object::cast_to<godot::$GodotType>( $this.value );
               |  if (node)
               |  {
-              |    $result = (PlasmacoreGDObject){ node->$method_name().ptr() };
+              |    $result = ROGUE_COMPOUND(PlasmacoreGDObject) { node->$method_name().ptr() };
               |  }
               |}
       return result
@@ -249,7 +249,7 @@ class GDNode [compound]
               |  godot::Variant result = $this.value->$method_name( arg );
               |  godot::UtilityFunctions::print( "META:" );
               |  godot::UtilityFunctions::print( result );
-              |  GDVariantPointer v_pointer = (GDVariantPointer){ &result };
+              |  GDVariantPointer v_pointer = ROGUE_COMPOUND(GDVariantPointer) { &result };
                  result = GDUtility.variant_to_value( v_pointer )
       native @|}
       return result
@@ -283,7 +283,7 @@ class GDNode( gd_node:NativeGDNode, type:GDNodeType ) [compound]
       if (not gd_node.exists) return this
 
       local result : NativeGDNode
-      native @|$result = (NativeGDNode){ $gd_node.value->duplicate() };
+      native @|$result = ROGUE_COMPOUND(NativeGDNode) { $gd_node.value->duplicate() };
       return GDNode( result, type )
 
     method add( child:GDNode )
@@ -306,14 +306,14 @@ class GDNode( gd_node:NativeGDNode, type:GDNodeType ) [compound]
 
     method get( index:Int32 )->GDNode
       local child : NativeGDNode
-      native @|$child = (NativeGDNode){ $gd_node.value->get_child( $index ) };
+      native @|$child = ROGUE_COMPOUND(NativeGDNode) { $gd_node.value->get_child( $index ) };
       return GDNode( child )
 
     method get( node_path:String )->GDNode
       local result : NativeGDNode
       if (gd_node.exists)
         native @|godot::NodePath path( $node_path->data->as_utf8 );
-                |$result = (NativeGDNode){ $gd_node.value->get_node_or_null( path ) };
+                |$result = ROGUE_COMPOUND(NativeGDNode) { $gd_node.value->get_node_or_null( path ) };
       endIf
       return GDNode( result )
 
@@ -431,7 +431,7 @@ class GDNodeTypeSprite3D : GDNodeTypeNode3D [singleton]
     method texture( gd_node:NativeGDNode )->GDRef
       local native_ref : NativeGDRef
       native @|godot::Ref<godot::Texture2D> ref = godot::Object::cast_to<godot::Sprite3D>( $gd_node.value )->get_texture();
-      native @|$native_ref = (NativeGDRef){ ref.ptr() };
+      native @|$native_ref = ROGUE_COMPOUND(NativeGDRef) { ref.ptr() };
       return GDRef( native_ref, GDRefTypeTexture2D )
 endClass
 }#
