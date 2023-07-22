@@ -3,9 +3,11 @@ module Plasmacore
 uses Geometry [export]
 uses Math/Best
 
+$include Plasmacore/App
 $include Plasmacore/Display
-$include Plasmacore/Godot
 $include Plasmacore/Drawable
+$include Plasmacore/Godot
+$include Plasmacore/ScreenState
 
 class Plasmacore [essential api singleton]
   PROPERTIES
