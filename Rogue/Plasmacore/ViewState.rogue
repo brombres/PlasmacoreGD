@@ -1,0 +1,46 @@
+module Plasmacore
+
+uses Control/State
+
+class ViewState : State<<ViewState>> [singleton]
+  # Primary overrideable methods:
+  # method on_start
+  # method on_finish
+  # method on_update
+  GLOBAL PROPERTIES
+    dt : Real64
+
+  PROPERTIES
+    _drawables = Drawable[]
+
+  METHODS
+    method drawable( name:String )->Drawable
+      local result = Drawable( name )
+      _drawables.add( result )
+      return result
+
+    method on_draw
+      noAction
+
+    method after_draw
+      noAction
+
+    method on_scene_change
+      # Plasmacore.gd_scene can be queried for .name and .filepath
+      noAction
+
+    method update( _dt:Real )
+      dt = _dt
+      ViewState = this.updated
+
+    method updated->ViewState [override]
+      local result = prior.updated
+      if (not result) result = ViewState()
+      return result
+
+    method _handle_finish [override]
+      on_finish
+      (forEach in _drawables).delete
+      _drawables.clear
+
+endClass

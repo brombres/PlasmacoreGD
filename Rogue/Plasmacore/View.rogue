@@ -1,0 +1,38 @@
+module Plasmacore
+
+class View [singleton]
+  GLOBAL PROPERTIES
+    dt : Real
+
+  GLOBAL METHODS
+    method on_singleton_change( old_view:View, new_view:View )
+      if (old_view) old_view._handle_finish
+      if (new_view) new_view.on_start
+
+  PROPERTIES
+    _drawables = Drawable[]
+
+  METHODS
+    method drawable( name:String )->Drawable
+      local result = Drawable( name )
+      _drawables.add( result )
+      return result
+
+    method on_draw
+
+    method on_finish
+
+    method on_start
+
+    method on_update
+
+    method update( _dt:Real )
+      dt = _dt
+      on_update
+
+    method _handle_finish
+      (forEach in _drawables).delete
+      _drawables.clear
+      on_finish
+
+endClass

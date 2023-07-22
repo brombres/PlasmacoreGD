@@ -33,7 +33,7 @@ augment Rogue::GDObject
       call<<"Node",queue_free>>
 
     method filepath->String
-      return query<<"Node",get_file_path>>
+      return query<<"Node",get_scene_file_path>>
 
     method get( index:Int32 )->GDObject
       return query<<"Node",get_child>>( index )->GDObject

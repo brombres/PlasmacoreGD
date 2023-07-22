@@ -1,6 +1,6 @@
 module Plasmacore
 
-class Drawable
+class Drawable [essential]
   GLOBAL PROPERTIES
     lookup       : [String:GDObject]
     next_z_index : Int32

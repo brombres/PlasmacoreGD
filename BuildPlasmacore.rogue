@@ -120,7 +120,7 @@ routine copy_products( project_filepath:String )->Logical
   local project_folder = File( project_filepath )
   if (not project_folder.exists) return false
 
-  local output = subrogo( "copy products $ $ $"(project_folder.esc,not synched_any,Console.width), &capture_output )
+  local output = subrogo( "copy products $ $ $"(project_folder.abs.esc,true,Console.width), &capture_output )
   if (String.exists(output))
     synched_any = true
   endIf
