@@ -1,3 +1,0 @@
-uses Plasmacore
-
-Log.println "Streets ahead!"

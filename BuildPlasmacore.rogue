@@ -9,9 +9,9 @@ uses Utility/VersionNumber
 
 augment Build
   # You can create a Local.rogo file with overrides for these values, e.g.:
-  #   AUTOLAUNCH = "path/to/project/folder"
+  #   AUTOLAUNCH = false
   PROPERTIES
-    AUTOLAUNCH        = ""  # Godot project path to auto-launch after a default 'rogo' build.
+    AUTOLAUNCH        = true
     GODOT_EXE_MACOS   = ""
     GODOT_EXE_WINDOWS = ""
     GODOT_EXE_LINUX   = ""
@@ -20,6 +20,7 @@ augment Build
 endAugment
 
 routine rogo_default
+  rogo_deps
   rogo_build
   rogo_run
 endRoutine
@@ -27,16 +28,17 @@ endRoutine
 routine rogo_build
   rogo_build_rogue
 	subrogo( "build skip_sync w=$"(Console.width) )
-	sync_products
+  sync_products
 endRoutine
 
 routine rogo_rebuild
   rogo_compile_rogue
 	subrogo( "build skip_sync w=$"(Console.width) )
-	sync_products
+  sync_products
 endRoutine
 
 routine rogo_build_rogue
+  rogo_deps
   local source = Files(".")
   source.add( "Source/**/*.rogue" )
   source.add( "Libraries/Plasmacore/Rogue/**/*.rogue" )
@@ -46,6 +48,7 @@ routine rogo_build_rogue
 endRoutine
 
 routine rogo_compile_rogue( platform="":String )
+  rogo_deps
   if (String.exists(platform))
     # Re-capitalize 'platform'
     local platforms = ["Android","iOS","Linux","macOS","UWP","Web","Windows"]
@@ -73,104 +76,53 @@ routine rogo_run
     if (System.is_macos)
       local exe = Build.GODOT_EXE_MACOS
       if (String.exists(exe) and not exe.ends_with(".app"))
-        local cmd = "$ $/project.godot"(File(Build.GODOT_EXE_MACOS).esc,File(Build.AUTOLAUNCH).esc)
+        local cmd = "$ GodotProject/project.godot"(File(Build.GODOT_EXE_MACOS).esc)
         execute cmd
       else
         local cmd = "open"
         if (String.exists(exe)) cmd .= appending( "-a $"(File(exe).esc) )
-        cmd .= appending( "$/project.godot"(File(Build.AUTOLAUNCH).esc) )
+        cmd .= appending( "GodotProject/project.godot" )
         execute cmd
       endIf
     elseIf (System.is_windows)
       if (String.exists(Build.GODOT_EXE_WINDOWS))
-        local cmd = "$ $/project.godot"(File(Build.GODOT_EXE_WINDOWS).esc,File(Build.AUTOLAUNCH).esc)
+        local cmd = "$ GodotProject/project.godot"(File(Build.GODOT_EXE_WINDOWS).esc)
         execute cmd
       endIf
     else
       if (String.exists(Build.GODOT_EXE_LINUX))
-        local cmd = "$ $/project.godot"(File(Build.GODOT_EXE_LINUX).esc,File(Build.AUTOLAUNCH).esc)
+        local cmd = "$ GodotProject/project.godot"(File(Build.GODOT_EXE_LINUX).esc)
         execute cmd
       endIf
     endIf
   endIf
 endRoutine
 
-routine rogo_sync( project_filepath="":String )
-  # Syncs the specified project to be automatically kept up-to-date with Plasmacore's build products.
-  # Multiple projects can be synced. Run 'rogo unsync <project_filepath>' to stop updating a project with new build products.
-  if (not String.exists(project_filepath))
-    sync_products
-    return
-  endIf
-
-  project_filepath = File( project_filepath ).abs
-  if (project_filepath.ends_with("/project.godot"))
-    project_filepath = File(project_filepath).folder
-  endIf
-
-  local synched_projects = String[]
-  local file =  File("SynchedProjects.rogo")
-  if (file.exists) synched_projects = String( file ).trimmed.split( '\n' )
-  if (not synched_projects.contains(project_filepath))
-    if (File(project_filepath).exists and File(project_filepath/"project.godot").exists)
-      synched_projects.add( project_filepath )
-    elseIf (File(project_filepath).exists)
-      error.println "[ERROR] $ does not contain a project.godot file - skipping."(project_filepath)
-      return
-    else
-      error.println "[ERROR] Filepath '$' does not exist - skipping."(project_filepath)
-      return
-    endIf
-  endIf
-  banner "Now synching build products to " + project_filepath
-  file.save( synched_projects.join('\n') + "\n" )
-
-  sync_products
+routine rogo_sync
+  rogo_deps
+  sync_products( &needs_output )
 endRoutine
 
-routine rogo_unsync( project_filepath:String )
-  # Stops updating the specified Godot project with updated builds of this extension.
-  project_filepath = File( project_filepath ).abs
+routine sync_products( &needs_output )
+  if (copy_products("GodotProject"))
+    needs_output = false
+  endIf
 
-  local synched_projects = String[]
-  local file =  File("SynchedProjects.rogo")
-  if (file.exists) synched_projects = String( file ).trimmed.split( '\n' )
-  synched_projects.remove( project_filepath )
-  banner "Build products are no longer synched to " + project_filepath
-  file.save( synched_projects.join('\n') )
-endRoutine
-
-routine sync_products
-  # Copy build products to synched output projects.
-  local needs_header = true
-  local message = "Synchronizing build products to linked projects"
-
-  local synched_projects = String[]
-  local file =  File("SynchedProjects.rogo")
-  if (file.exists) synched_projects = String( file ).trimmed.split( '\n' )
-  forEach (project_filepath in synched_projects)
-    if (rogo_copy_products( project_filepath, &=needs_header ))
-      needs_header = false
-    endIf
-  endForEach
-
-  if (needs_header)
-    banner "All synchronized projects are up to date."
+  if (needs_output)
+    banner "GodotProject is up-to-date."
   endIf
 endRoutine
 
-routine rogo_copy_products( project_filepath:String, &needs_header )->Logical
+routine copy_products( project_filepath:String )->Logical
   # Copy build products to a specific project folder.
-  local message = "Synchronizing build products to linked projects"
   local synched_any = false
 
   local project_folder = File( project_filepath )
   if (not project_folder.exists) return false
 
-	local output = subrogo( "copy products $ $ $"(project_folder.esc,needs_header,Console.width), &capture_output )
+  local output = subrogo( "copy products $ $ $"(project_folder.esc,not synched_any,Console.width), &capture_output )
   if (String.exists(output))
     synched_any = true
-    needs_header = false
   endIf
 
 	local products =
@@ -182,11 +134,14 @@ routine rogo_copy_products( project_filepath:String, &needs_header )->Logical
 	]
 
 	forEach (product in products)
-		if (copy(product, project_folder, &=needs_header))
-			needs_header = false
+    if (copy(product, "Libraries/Plasmacore/Godot", project_folder ))
 			synched_any = true
 		endIf
 	endForEach
+
+  if (copy("BuildPlasmacore.rogue", "Libraries/Plasmacore", "." ))
+    synched_any = true
+  endIf
 
   return synched_any
 endRoutine
@@ -209,18 +164,16 @@ routine patch_gitignore( patcher:GitIgnorePatcher )
   patcher.add( "# Rogo", ".rogo" )
   patcher.add( "# Rogo", "/Build" )
   patcher.add( "# Rogo", "BuildLocal.rogue" )
-  patcher.add( "# Rogo", "/SynchedProjects.rogo" )
   patcher.add( "# Rogo", "Local.rogo" )
 
-  patcher.add( "# SCons", ".sconsign.dblite" )
+  patcher.add( "# Plasmacore", "/Libraries/Plasmacore" )
 
   patcher.add( "# Vim", "*.swo" )
   patcher.add( "# Vim", "*.swp" )
 endRoutine
 
-routine copy( filename:String, project_path:String, &needs_header )->Logical
-  local message = "Synchronizing build products to linked projects"
-  local src = File("Libraries/Plasmacore/Godot"/filename)
+routine copy( filename:String, from_path:String, project_path:String )->Logical
+  local src = File(from_path/filename)
   local dest = File(project_path/filename)
 
   if (not dest.exists)
@@ -236,10 +189,6 @@ routine copy( filename:String, project_path:String, &needs_header )->Logical
   if (dest.exists and dest.is_newer_than(src))  # FIXME: DEV KLUDGE
     if local n = dest.copy_to( src, &if_newer, &dry_run )
       if (n > 0)
-        if (needs_header)
-          banner message
-          needs_header = false
-        endIf
         dest.copy_to( src, &if_newer, &verbose )
         copied_any = true
       endIf
@@ -248,10 +197,6 @@ routine copy( filename:String, project_path:String, &needs_header )->Logical
 
   if local n = src.copy_to( dest, &if_different, &dry_run )
     if (n > 0)
-      if (needs_header)
-        banner message
-        needs_header = false
-      endIf
       src.copy_to( dest, &if_different, &verbose )
       copied_any = true
     endIf
