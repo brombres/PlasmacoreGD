@@ -19,7 +19,10 @@ class Plasmacore [essential api singleton]
     is_2dx : Logical
     is_3d  : Logical
 
-    drawable : Drawable
+    tile_length = 8.0
+    terrain : Drawable[]
+    tiles_high : Int32
+    tiles_wide : Int32
 
   METHODS
     method init
@@ -27,8 +30,9 @@ class Plasmacore [essential api singleton]
       Global.error = ErrorLog
 
     method draw
-      if (drawable)
-        drawable.draw( XY(100,100) )
+      Drawable.next_z_index = 1
+      if (terrain)
+        (forEach in terrain).draw
       endIf
 
     method on_new_scene( mode:Int32, gd_root, gd_config )
@@ -40,11 +44,26 @@ class Plasmacore [essential api singleton]
       gd_assets = gd_config//Assets
       if (gd_assets) gd_drawables = gd_assets//Drawables
 
-      drawable = Drawable( "Sand" )
-      drawable.node( "set_variation", 7 )
-
     method on_update( dt:Real64, display_size:XY )
       Display.size = display_size
+
+      if (not terrain)
+        tiles_wide = 20
+        tiles_high = 11
+        terrain = Drawable[]( tiles_wide * tiles_high )
+        loop (tiles_wide*tiles_high) terrain.add( Drawable("Sand") )
+      endIf
+
+      forEach (j in 0..<tiles_high)
+        forEach (i in 0..<tiles_wide)
+          local sand = terrain[j*tiles_wide+i]
+          local len = tile_length->Int32
+          sand.position = XY(i,j) * len + XY(len)/2
+          sand.scale = len->Real64 / RealXY(sand.base_size)
+        endForEach
+      endForEach
+
+      tile_length *= 1.01
 
       draw
 endClass

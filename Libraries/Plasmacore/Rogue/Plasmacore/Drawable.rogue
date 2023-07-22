@@ -1,12 +1,25 @@
 module Plasmacore
 
 class Drawable
+  GLOBAL PROPERTIES
+    lookup       : [String:GDObject]
+    next_z_index : Int32
+
   PROPERTIES
     node : GDObject
 
+    position : XYZ
+    scale    = XYZ(1,1,1)
+    rotation : XYZ
+
   METHODS
     method init( name:String )
+      if (not lookup) lookup = [String:GDObject]
+
       contingent
+        node = lookup[ name ]
+        sufficient (node)
+
         if (Plasmacore.gd_drawables) node = Plasmacore.gd_drawables[name]
         sufficient (node)
 
@@ -19,40 +32,61 @@ class Drawable
         node = Plasmacore.gd_scene[name]
       endContingent
 
-      if (node) init( node.cloned )
+      if (node)
+        lookup[ name ] = node
+        init( node.cloned )
+      endIf
 
     method init( node )
       if (node)
-        trace Plasmacore.gd_config
-        trace node
         Plasmacore.gd_config.add( node )
         node.visible = true
         node.pixel_scale = 1.0  # only affects Sprite3D
       endIf
 
-      trace node.meta( "size" )
-      trace base_size
+    method cloned->Drawable
+      return Drawable( node.cloned )
+
+    method on_cleanup
+      delete
 
     method base_size->XY
+      if local size = node.meta( "size" )
+        return size
+      endIf
+
       if local frames = node.sprite_frames
-        trace frames
         if local frame = frames.texture("",0)
-          trace frame
           return frame.size
         endIf
       endIf
       return XY(0,0)
 
-    method cloned->Drawable
-      return Drawable( node.cloned )
+    method delete
+      if (node)
+        if (node.parent)
+          node.parent.remove( node )
+        endIf
+        node.delete
+        node = GDObject()
+      endIf
 
-    method draw( position:RealXY, scale=RealXY(1,1):RealXY, rotation=Radians(0):Radians )
+    method draw
       if (Plasmacore.is_2dx)
-        node.position = RealXY( position.x, Display.size.y - position.y )
+        node.position = XYZ( position.x, Display.size.y - position.y )
       else
         node.position = position
       endIf
       node.scale = scale
-      node.rotation = rotation.value
+      node.rotation = rotation
+      if (Plasmacore.is_2d)
+        node.z_index = next_z_index
+        ++next_z_index
+      endIf
+
+    method set_scale( s:Real64 )
+      @scale = XYZ( s, s, s )
+
+    method set_scale( @scale )
 
 endClass

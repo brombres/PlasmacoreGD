@@ -29,6 +29,9 @@ augment Rogue::GDObject
     method count->Int32
       return query<<"Node",get_child_count>>->String
 
+    method delete
+      call<<"Node",queue_free>>
+
     method filepath->String
       return query<<"Node",get_file_path>>
 
@@ -41,19 +44,25 @@ augment Rogue::GDObject
     method has_method( name:String )->Logical
       return query<<"Object",has_method>>
 
-    method meta( name:String )->Value
-      return query<<"Object",get_meta>>( name )
-
     method instance_of<<$GodotType>>->Logical
       local result : Logical
       native @|if ($this.value) $result = !!godot::Object::cast_to<godot::$GodotType>( $this.value );
       return result
+
+    method meta( name:String )->Value
+      return query<<"Object",get_meta>>( name )
 
     method last->GDObject
       return this[ count - 1 ]
 
     method name->String
       return query<<"Node",get_name>>
+
+    method parent->GDObject
+      return query<<"Node",get_parent>>
+
+    method remove( child:GDObject )
+      call<<"Node",remove_child, "Node">>( child )
 
     method set_name( new_name:String )
       call<<"Node",set_name>>( new_name )
@@ -69,9 +78,17 @@ augment Rogue::GDObject
       call<<"Node2D",set_position>>( xy )
       call<<"Node3D",set_position>>( XYZ(xy,0) )
 
+    method set_position( xyz:XYZ )
+      call<<"Node2D",set_position>>( xyz->RealXY )
+      call<<"Node3D",set_position>>( xyz )
+
     method set_rotation( radians:Radians )
-      call<<"Node2D",set_rotation>>( radians.value )
-      call<<"Node3D",set_rotation>>( XYZ(0,0,radians.value) )
+      call<<"Node2D",set_rotation>>( radians )
+      call<<"Node3D",set_rotation>>( XYZ(0,0,radians) )
+
+    method set_rotation( radians:XYZ )
+      call<<"Node2D",set_rotation>>( radians.z )
+      call<<"Node3D",set_rotation>>( radians )
 
     method set_scale( scale:Real )
       call<<"Node2D",set_scale>>( RealXY(scale,scale) )
@@ -84,6 +101,9 @@ augment Rogue::GDObject
     method set_visible( setting:Logical )
       call<<"Node2D",set_visible>>( setting )
       call<<"Node3D",set_visible>>( setting )
+
+    method set_z_index( value:Int32 )
+      call<<"Node2D",set_z_index>>( value )
 
     method size->XY
       if (this.instance_of<<"Texture2D">>) return query<<"Texture2D",get_size>>
