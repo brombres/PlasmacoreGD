@@ -14,9 +14,15 @@ class View [singleton]
 
   METHODS
     method drawable( name:String )->Drawable
+      # Loads a Drawable while adding it to an internal list where the Drawable is automatically
+      # deleted when the View changes.
       local result = Drawable( name )
       _drawables.add( result )
       return result
+
+    method get( name:String )->Drawable
+      # Allows view//DName <-> view.drawable("DName")
+      return drawable( name )
 
     method on_draw
 

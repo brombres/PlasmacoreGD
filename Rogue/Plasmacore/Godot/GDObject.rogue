@@ -7,6 +7,9 @@ augment Rogue::GDObject
     method cloned->GDObject
       return query<<"Node",duplicate>>
 
+    method class_name->String
+      return query<<"Object",get_class>>->String
+
     method add( child:GDObject )
       call<<"Node",add_child,"Node">>( child )
 
@@ -22,9 +25,6 @@ augment Rogue::GDObject
         local v_arg = GDVariant( args )
         return native( "ROGUE_COMPOUND(GDVariant){ $this.value->call($v_name.value, $v_arg.value) }" )->GDVariant
       endIf
-
-    method class_name->String
-      return query<<"Object",get_class>>->String
 
     method count->Int32
       return query<<"Node",get_child_count>>->String
@@ -114,6 +114,9 @@ augment Rogue::GDObject
 
     method texture( animation_name:String, index:Int32 )->GDObject
       return query<<"SpriteFrames",get_frame_texture>>( animation_name, index )
+
+    method to->GDNode2D
+      return native( "ROGUE_COMPOUND(GDNode2D){ godot::Object::cast_to<godot::Node2D>($this.value) }" )->GDNode2D
 
     method to->String
       return name
@@ -206,6 +209,53 @@ augment Rogue::GDObject
 
 endAugment
 
+class GDObjectMethods [aspect]
+  METHODS
+    method class_name->String
+      return this->GDObject.class_name
+
+    method call( method_name:String, args=undefined:Value )->Value
+      return this->GDObject.call( method_name, args )
+
+    method has_method( name:String )->Logical
+      return this->GDObject.has_method( name )
+
+    method instance_of<<$GodotType>>->Logical
+      local result : Logical
+      native @|if ($this.value) $result = !!godot::Object::cast_to<godot::$GodotType>( $this.value );
+      return result
+
+    method meta( name:String )->Value
+      return this->GDObject.meta( name )
+
+    method last->GDObject
+      return this[ count - 1 ]
+
+    method to->String
+      return name
+
+    method call<<$GodotType,$method_name>>
+      this->GDObject.call<<$GodotType,$method_name>>
+
+    method call<<$GodotType,$method_name>>( arg:Value )
+      this->GDObject.call<<$GodotType,$method_name>>( arg )
+
+    method call<<$GodotType,$method_name,$GodotArgType>>( arg:Value )
+      this->GDObject.call<<$GodotType,$method_name,$GodotArgType>>( arg )
+
+    method call<<$GodotType,$method_name>>( arg1:Value, arg2:Value )
+      this->GDObject.call<<$GodotType,$method_name>>( arg1, arg2 )
+
+    method query<<$GodotType,$method_name>>->Value
+      return this->GDObject.query<<$GodotType,$method_name>>
+
+    method query<<$GodotType,$method_name>>( arg:Value )->Value
+      return this->GDObject.query<<$GodotType,$method_name>>( arg )
+
+    method query<<$GodotType,$method_name>>( arg1:Value, arg2:Value )->Value
+      return this->GDObject.query<<$GodotType,$method_name>>( arg1, arg2 )
+endClass
+
 
 augment Rogue::Value
   GLOBAL METHODS
@@ -221,4 +271,5 @@ augment Rogue::Value
       endIf
       return GDObject()
 endAugment
+
 

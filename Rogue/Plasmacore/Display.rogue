@@ -5,6 +5,16 @@ class Display [singleton]
     size      : XY
 
   METHODS
-    method center->XY
-      return size / 2
+    method center->RealXY
+      return size / 2.0
+
+    method is_tablet->Logical
+      if ($target("iOS"))
+        return (native("UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad")->Logical)
+      elseIf ($target("Android"))
+        trace "TODO"
+        return false
+      else
+        return false
+      endIf
 endClass
