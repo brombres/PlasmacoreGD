@@ -20,30 +20,19 @@ void NativePlasmacore::launch()
   }
 }
 
-void NativePlasmacore::on_new_scene( int mode, Node* root, Node* config )
+godot::Variant NativePlasmacore::call( godot::Variant name, godot::Variant args )
 {
-  if (Engine::get_singleton()->is_editor_hint()) return;
-	PlasmacorePlasmacore__on_new_scene__RogueInt32_GDObject_GDObject(
-      ROGUE_SINGLETON(PlasmacorePlasmacore),
-      mode,
-      ROGUE_COMPOUND(GDObject){root},
-      ROGUE_COMPOUND(GDObject){config}
-  );
-}
+  if (Engine::get_singleton()->is_editor_hint()) return godot::Variant();
 
-void NativePlasmacore::on_update( double dt, Vector2 display_size )
-{
-  if ( !Engine::get_singleton()->is_editor_hint() )
-  {
-    GeometryXY size = ROGUE_COMPOUND(GeometryXY){ (RogueInt32)display_size.x, (RogueInt32)display_size.y };
-    PlasmacorePlasmacore__on_update__RogueReal64_GeometryXY( ROGUE_SINGLETON(PlasmacorePlasmacore), dt, size );
-    Rogue_check_gc();
-  }
+  return PlasmacorePlasmacore__on_message__GDVariant_GDVariant(
+      ROGUE_SINGLETON(PlasmacorePlasmacore),
+      ROGUE_COMPOUND(GDVariant){name},
+      ROGUE_COMPOUND(GDVariant){args}
+  ).value;
 }
 
 void NativePlasmacore::_bind_methods()
 {
-	ClassDB::bind_method( D_METHOD("launch" ),                                 &NativePlasmacore::launch );
-	ClassDB::bind_method( D_METHOD("on_new_scene", "mode", "root", "config" ), &NativePlasmacore::on_new_scene );
-	ClassDB::bind_method( D_METHOD("on_update", "dt", "display_size" ),        &NativePlasmacore::on_update );
+	ClassDB::bind_method( D_METHOD("launch"), &NativePlasmacore::launch );
+	ClassDB::bind_method( D_METHOD("call"),   &NativePlasmacore::call, DEFVAL(nullptr) );
 }

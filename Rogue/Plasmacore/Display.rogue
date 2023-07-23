@@ -5,6 +5,9 @@ class Display [singleton]
     size      : XY
 
   METHODS
+    method bounds->Box
+      return Box( size )
+
     method center->RealXY
       return size / 2.0
 

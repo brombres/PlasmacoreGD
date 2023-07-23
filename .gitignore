@@ -23,6 +23,7 @@ Local.rogo
 
 # Plasmacore
 /Source/Generated
+/Libraries/Plasmacore
 
 # Mac
 .DS_Store

@@ -35,7 +35,6 @@ class Drawable [essential]
       if (node)
         lookup[ name ] = node
         init( node.cloned )
-        trace node->GDNode2D.class_name
       endIf
 
     method init( node )

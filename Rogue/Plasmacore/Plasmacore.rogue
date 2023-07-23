@@ -1,6 +1,7 @@
 module Plasmacore
 
 uses Geometry [export]
+uses Graphics [export]
 uses Math/Best
 
 $include Plasmacore/App
@@ -12,28 +13,41 @@ $include Plasmacore/ViewState
 
 class Plasmacore [essential api singleton]
   PROPERTIES
-    gd_root      : GDObject
-    gd_scene     : GDObject
-    gd_config    : GDObject
-    gd_assets    : GDObject
-    gd_drawables : GDObject
+    gd_root       : GDObject
+    gd_plasmacore : GDObject
+    gd_scene      : GDObject
+    gd_config     : GDObject
+    gd_assets     : GDObject
+    gd_drawables  : GDObject
 
     is_2d  : Logical
     is_2dx : Logical
     is_3d  : Logical
 
+    message_handlers = [String:Function(GDVariant)->GDVariant]
+
   METHODS
     method init
       Global.output = Log
       Global.error = ErrorLog
+      on_message( "Plasmacore.begin_new_scene", (args) => Plasmacore.on_new_scene(args[0],args[1],args[2],args[3]) )
+      on_message( "Plasmacore.draw",   (args) => Plasmacore.on_draw )
+      on_message( "Plasmacore.update", (args) => Plasmacore.on_update(args[0],args[1]) )
 
-    method draw
-      Drawable.next_z_index = 1
+    method on_draw
       ViewState.on_draw
       View.on_draw
       ViewState.after_draw
 
-    method on_new_scene( mode:Int32, gd_root, gd_config )
+    method on_message( name:String, handler:Function(GDVariant)->GDVariant )
+      message_handlers[ name ] = handler
+
+    method on_message( name:GDVariant, args:GDVariant )->GDVariant
+      local handler = message_handlers[ name ]
+      if (handler) return handler( args )
+      else         return GDVariant()
+
+    method on_new_scene( mode:Int32, gd_root, gd_plasmacore, gd_config )
       is_2dx = (mode == 1)
       is_2d = (mode == 2)
       is_3d = (mode == 3)
@@ -46,8 +60,8 @@ class Plasmacore [essential api singleton]
 
     method on_update( dt:Real64, display_size:XY )
       Display.size = display_size
+
+      Drawable.next_z_index = 1
       ViewState.update( dt )
       View.update( dt )
-
-      draw
 endClass

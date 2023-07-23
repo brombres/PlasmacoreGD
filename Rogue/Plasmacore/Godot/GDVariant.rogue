@@ -164,6 +164,9 @@ augment Rogue::GDVariant
     method to->String
       return this->Value->String
 
+    method to->XY
+      return this->Value->XY
+
     method to->Value
       which ( native("(RogueInt32) $this.value.get_type()")->Int32 )
         case native("godot::Variant::Type::NIL")->LiteralInt32

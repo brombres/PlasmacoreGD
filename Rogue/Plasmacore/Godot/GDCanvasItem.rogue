@@ -1,7 +1,0 @@
-module Plasmacore
-
-ROGUE_NATIVE_POINTER_TYPE<<"godot::CanvasItem*",GDCanvasItem>>
-
-augment Rogue::GDCanvasItem
-  METHODS
-endClass

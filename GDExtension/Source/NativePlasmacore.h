@@ -30,8 +30,7 @@ class NativePlasmacore : public RefCounted
 		~NativePlasmacore();
 
     void launch();
-		void on_new_scene( int mode, Node* root, Node* config );
-    void on_update( double dt, Vector2 display_size );
+    godot::Variant call( godot::Variant name, godot::Variant args );
 };
 
 #endif // PLASMACORE_H
