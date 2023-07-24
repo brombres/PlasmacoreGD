@@ -11,19 +11,19 @@ class ViewState : State<<ViewState>> [singleton]
     dt : Real64
 
   PROPERTIES
-    _drawables = Drawable[]
+    _graphics = Graphic[]
 
   METHODS
-    method drawable( name:String )->Drawable
-      # Loads a Drawable while adding it to an internal list where the Drawable is automatically
+    method graphic( name:String )->Graphic
+      # Loads a Graphic while adding it to an internal list where the Graphic is automatically
       # deleted when the ViewState changes.
-      local result = Drawable( name )
-      _drawables.add( result )
+      local result = Graphic( name )
+      _graphics.add( result )
       return result
 
-    method get( name:String )->Drawable
-      # Allows state//DName <-> state.drawable("DName")
-      return drawable( name )
+    method get( name:String )->Graphic
+      # Allows state//DName <-> state.graphic("DName")
+      return graphic( name )
 
     method on_draw
       noAction
@@ -46,7 +46,7 @@ class ViewState : State<<ViewState>> [singleton]
 
     method _handle_finish [override]
       on_finish
-      (forEach in _drawables).delete
-      _drawables.clear
+      (forEach in _graphics).delete
+      _graphics.clear
 
 endClass

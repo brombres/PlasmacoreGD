@@ -6,7 +6,7 @@ uses Math/Best
 
 $include Plasmacore/App
 $include Plasmacore/Display
-$include Plasmacore/Drawable
+$include Plasmacore/Graphic
 $include Plasmacore/Godot
 $include Plasmacore/View
 $include Plasmacore/ViewState
@@ -18,7 +18,7 @@ class Plasmacore [essential api singleton]
     gd_scene      : GDObject
     gd_config     : GDObject
     gd_assets     : GDObject
-    gd_drawables  : GDObject
+    gd_graphics  : GDObject
 
     is_2d  : Logical
     is_2dx : Logical
@@ -54,14 +54,14 @@ class Plasmacore [essential api singleton]
 
       gd_scene  = gd_root.last
       gd_assets = gd_config//Assets
-      if (gd_assets) gd_drawables = gd_assets//Drawables
+      if (gd_assets) gd_graphics = gd_assets//Graphics
 
       ViewState.on_scene_change
 
     method on_update( dt:Real64, display_size:XY )
       Display.size = display_size
 
-      Drawable.next_z_index = 1
+      Graphic.next_z_index = 1
       ViewState.update( dt )
       View.update( dt )
 endClass

@@ -1,6 +1,6 @@
 module Plasmacore
 
-class Drawable [essential]
+class Graphic [essential]
   GLOBAL PROPERTIES
     lookup       : [String:GDObject]
     next_z_index : Int32
@@ -20,7 +20,7 @@ class Drawable [essential]
         node = lookup[ name ]
         sufficient (node)
 
-        if (Plasmacore.gd_drawables) node = Plasmacore.gd_drawables[name]
+        if (Plasmacore.gd_graphics) node = Plasmacore.gd_graphics[name]
         sufficient (node)
 
         if (Plasmacore.gd_assets) node = Plasmacore.gd_assets[name]
@@ -44,8 +44,8 @@ class Drawable [essential]
         node.pixel_scale = 1.0  # only affects Sprite3D
       endIf
 
-    method cloned->Drawable
-      return Drawable( node.cloned )
+    method cloned->Graphic
+      return Graphic( node.cloned )
 
     method on_cleanup
       delete

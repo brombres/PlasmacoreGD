@@ -7,7 +7,6 @@ func _ready():
 
 func _draw():
 	plasmacore.call( "Plasmacore.draw" )
-	#draw_rect( Rect2(0,0,200,100), Color.RED )
 
 func _process(delta):
 	var display_size = get_viewport().get_visible_rect().size

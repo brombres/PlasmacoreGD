@@ -10,19 +10,19 @@ class View [singleton]
       if (new_view) new_view.on_start
 
   PROPERTIES
-    _drawables = Drawable[]
+    _graphics = Graphic[]
 
   METHODS
-    method drawable( name:String )->Drawable
-      # Loads a Drawable while adding it to an internal list where the Drawable is automatically
+    method graphic( name:String )->Graphic
+      # Loads a Graphic while adding it to an internal list where the Graphic is automatically
       # deleted when the View changes.
-      local result = Drawable( name )
-      _drawables.add( result )
+      local result = Graphic( name )
+      _graphics.add( result )
       return result
 
-    method get( name:String )->Drawable
-      # Allows view//DName <-> view.drawable("DName")
-      return drawable( name )
+    method get( name:String )->Graphic
+      # Allows view//DName <-> view.graphic("DName")
+      return graphic( name )
 
     method on_draw
 
@@ -37,8 +37,8 @@ class View [singleton]
       on_update
 
     method _handle_finish
-      (forEach in _drawables).delete
-      _drawables.clear
+      (forEach in _graphics).delete
+      _graphics.clear
       on_finish
 
 endClass
