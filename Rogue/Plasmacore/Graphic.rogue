@@ -43,12 +43,12 @@ class Graphic [essential]
 
       if (node)
         lookup[ name ] = node
-        init( node.cloned )
+        init( node.cloned, Plasmacore.gd_graphics )
       endIf
 
-    method init( node, parent=Plasmacore.gd_graphics:GDObject )
+    method init( node, parent=null:GDObject? )
       if (node)
-        parent.add( node )
+        if (parent) parent.value.add( node )
         node.pixel_scale = 1.0  # only affects Sprite3D
         base_size = find_base_size
       endIf
@@ -63,9 +63,10 @@ class Graphic [essential]
       this.@rotation = existing.rotation
       this.base_size = existing.base_size
       this.base_scale = existing.base_scale
+      existing.node.parent.add( this.node )
 
     method cloned->Graphic
-      return Graphic( node.cloned.[is_visible=false] )
+      return Graphic( this )
 
     method on_cleanup
       delete
