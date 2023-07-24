@@ -28,7 +28,7 @@ class GDUtility [singleton]
           if (value->Logical) native @|*($variant.value) = (bool) 1;
           else                native @|*($variant.value) = (bool) 0;
         case Value.TYPE_XY
-          local value = value->XY
+          local value = value->IntXY
           native @|*($variant.value) = godot::Vector2i($value.x,$value.y);
         case Value.TYPE_BOX
           local value = value->Box

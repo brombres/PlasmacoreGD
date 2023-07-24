@@ -1,0 +1,15 @@
+module Geometry
+uses Graphics
+uses Plasmacore
+
+augment Box
+  METHODS
+    method fill( color:Color )
+      Plasmacore.gd_plasmacore.fill( this, color )
+endAugment
+
+augment IntBox
+  METHODS
+    method fill( color:Color )
+      Plasmacore.gd_plasmacore.fill( this, color )
+endAugment

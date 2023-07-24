@@ -5,6 +5,7 @@ uses Graphics [export]
 uses Math/Best
 
 $include Plasmacore/App
+$include Plasmacore/Box
 $include Plasmacore/Display
 $include Plasmacore/Graphic
 $include Plasmacore/Godot
@@ -13,18 +14,33 @@ $include Plasmacore/ViewState
 
 class Plasmacore [essential api singleton]
   PROPERTIES
-    gd_root       : GDObject
-    gd_plasmacore : GDObject
-    gd_scene      : GDObject
-    gd_config     : GDObject
-    gd_assets     : GDObject
-    gd_graphics  : GDObject
-
     is_2d  : Logical
     is_2dx : Logical
     is_3d  : Logical
 
+    gd_root       : GDObject
+    gd_plasmacore : GDObject
+    gd_scene      : GDObject
+
+    gd_config     : GDObject
+    gd_assets     : GDObject
+    gd_assets_graphics   : GDObject
+    gd_graphics   : GDObject
+
     message_handlers = [String:Function(GDVariant)->GDVariant]
+
+    active_graphics = Graphic[]
+    # When an inactive (untracked) graphic is first presented it marks itself active and presented,
+    # makes itself visible, and adds itself to this list.
+    #
+    # At the beginning of each update, all active_graphics are marked as not presented.
+    #
+    # Previously-active graphics that present again simply mark themselves as presented.
+    #
+    # At the end of each update, all active_graphics that have not been presented are marked
+    # inactive, made invisible, and removed from the active_graphics list.
+
+    active_drawing = Graphic[]
 
   METHODS
     method init
@@ -54,14 +70,55 @@ class Plasmacore [essential api singleton]
 
       gd_scene  = gd_root.last
       gd_assets = gd_config//Assets
-      if (gd_assets) gd_graphics = gd_assets//Graphics
+      if (gd_assets) gd_assets_graphics = gd_assets//Graphics
+
+      if (is_2d) gd_graphics = GDObject.create<<"Node2D">>( gd_config )
+      else       gd_graphics = GDObject.create<<"Node3D">>( gd_config )
 
       ViewState.on_scene_change
 
-    method on_update( dt:Real64, display_size:XY )
+    method on_update( dt:Real64, display_size:IntXY )
       Display.size = display_size
-
       Graphic.next_z_index = 1
+
+      on_update_begin
+
       ViewState.update( dt )
       View.update( dt )
+
+      on_update_end
+
+    method on_update_begin
+      (forEach in active_graphics).is_presented = false
+
+      forEach (graphic in active_drawing)
+        graphic.draw_pool.add( graphic.draw_list )
+        graphic.draw_list.clear
+      endForEach
+
+    method on_update_end
+      forEach (graphic in rewriter=active_graphics.rewriter)
+        if (graphic.is_presented)
+          # Keep in the active list
+          rewriter.write( graphic )
+        else
+          # Remove from the active list
+          graphic.is_active = false
+          graphic.is_visible = false
+        endIf
+      endForEach
+
+      forEach (graphic in rewriter=active_drawing.rewriter)
+        forEach (node in graphic.draw_pool)
+          node.visible = false
+          node.delete
+        endForEach
+        if (graphic.draw_list.count)
+          rewriter.write( graphic )
+        else
+          graphic.draw_list = null
+          graphic.draw_pool = null
+        endIf
+      endForEach
+
 endClass

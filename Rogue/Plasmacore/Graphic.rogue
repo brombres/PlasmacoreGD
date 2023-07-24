@@ -5,34 +5,18 @@ class Graphic [essential]
     lookup       : [String:GDObject]
     next_z_index : Int32
 
-    active_list : Graphic[]
-
-  GLOBAL METHODS
-    method on_begin_update
-      ensure<<active_list>>
-      (forEach in active_list).is_presented = false
-
-    method on_end_update
-      ensure<<active_list>>
-      forEach (graphic in rewriter=active_list.rewriter)
-        if (graphic.is_presented)
-          # Keep in the active list
-          rewriter.write( graphic )
-        else
-          # Will be removed from the active list
-          graphic.is_active = false
-          graphic.is_visible = false
-        endIf
-      endForEach
-
   PROPERTIES
-    node : GDObject
+    node      : GDObject
+
+    draw_list : GDObject[]
+    draw_pool : GDObject[]
 
     position : XYZ
     scale    = XYZ(1,1,1)
     rotation : XYZ
 
-    base_size : XY
+    base_size  : XYZ
+    base_scale : XYZ
 
     is_active    : Logical
     is_presented : Logical
@@ -45,7 +29,7 @@ class Graphic [essential]
         node = lookup[ name ]
         sufficient (node)
 
-        if (Plasmacore.gd_graphics) node = Plasmacore.gd_graphics[name]
+        if (Plasmacore.gd_assets_graphics) node = Plasmacore.gd_assets_graphics[name]
         sufficient (node)
 
         if (Plasmacore.gd_assets) node = Plasmacore.gd_assets[name]
@@ -62,12 +46,23 @@ class Graphic [essential]
         init( node.cloned )
       endIf
 
-    method init( node )
+    method init( node, parent=Plasmacore.gd_graphics:GDObject )
       if (node)
-        Plasmacore.gd_config.add( node )
+        parent.add( node )
         node.pixel_scale = 1.0  # only affects Sprite3D
         base_size = find_base_size
       endIf
+
+    method init( node, parent:Graphic )
+      init( node, parent.node )
+
+    method init( existing:Graphic )
+      this.node = existing.node.cloned.[ is_visible=false ]
+      this.@position = existing.position
+      this.@scale = existing.scale
+      this.@rotation = existing.rotation
+      this.base_size = existing.base_size
+      this.base_scale = existing.base_scale
 
     method cloned->Graphic
       return Graphic( node.cloned.[is_visible=false] )
@@ -75,22 +70,29 @@ class Graphic [essential]
     method on_cleanup
       delete
 
-    method find_base_size->XY
+    method add( child:Graphic )
+      node.add( child.node )
+
+    method find_base_size->XYZ
       if (node.has_method("get_size"))
-        return node( "get_size" )
+        local size = node( "get_size" )
+        if (size.is_xyz) return size
+        else             return size->XY
       endIf
 
-      if local size = node.meta( "size" )
-        return size
+      if (node.has_meta("size"))
+        local size = node.meta( "size" )
+        if (size.is_xyz) return size
+        else             return size->XY
       endIf
 
       if local frames = node.sprite_frames
         if local frame = frames.texture("",0)
-          return frame.size
+          return XYZ( frame.size, 1 )
         endIf
       endIf
 
-      return XY(100,100)
+      return XYZ(1,1,1)
 
     method delete
       if (node)
@@ -101,13 +103,43 @@ class Graphic [essential]
         node = GDObject()
       endIf
 
+    method draw( position:XY, rotation=Radians(0):Radians, scale=XY(1,1):XY )
+      local copy : GDObject
+
+      if (draw_pool and draw_pool.count)
+        copy = draw_pool.remove_last
+      else
+        copy = node.cloned( node.parent )
+        copy.visible = true
+      endIf
+
+      if (Plasmacore.is_2dx)
+        copy.position = XYZ( position.x, Display.size.y - position.y )
+      else
+        copy.position = position
+      endIf
+
+      copy.scale = base_scale * XYZ(scale,1)
+      copy.rotation = XYZ( this.rotation->XY, rotation.value )
+
+      if (Plasmacore.is_2d)
+        copy.z_index = next_z_index
+        ++next_z_index
+      endIf
+
+      if (not draw_list)
+        ensure<<draw_list>>
+        ensure<<draw_pool>>
+        Plasmacore.active_drawing.add( this )
+      endIf
+      draw_list.add( copy )
+
     method is_visible->Logical
       return node.visible
 
     method present
       if (not is_active)
-        ensure<<active_list>>
-        active_list.add( this )
+        Plasmacore.active_graphics.add( this )
         is_visible = true
         is_active = true
       endIf
@@ -117,7 +149,7 @@ class Graphic [essential]
       else
         node.position = position
       endIf
-      node.scale = scale
+      node.scale = base_scale * scale
       node.rotation = rotation
       if (Plasmacore.is_2d)
         node.z_index = next_z_index
@@ -125,6 +157,10 @@ class Graphic [essential]
       endIf
 
       is_presented = true
+
+    method set_bounds( box:Box )
+      position = box.center
+      size = box.size
 
     method set_is_visible( setting:Logical )
       node.visible = setting
@@ -134,7 +170,16 @@ class Graphic [essential]
 
     method set_scale( @scale )
 
-      #method set_size( sz:Real64 )
-      #set_size( XYZ(sz,sz,sz) )
+    method set_size( sz:Real64 )
+      base_scale = XYZ(sz,sz,sz) / base_size
+
+    method set_size( xy:IntXY )
+      base_scale = XYZ(xy->XY,1) / base_size
+
+    method set_size( xy:XY )
+      base_scale = XYZ(xy,1) / base_size
+
+    method set_size( xyz:XYZ )
+      base_scale = xyz / base_size
 
 endClass

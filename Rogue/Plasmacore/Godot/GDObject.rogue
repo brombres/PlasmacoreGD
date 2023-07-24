@@ -3,9 +3,21 @@ module Plasmacore
 ROGUE_NATIVE_POINTER_TYPE<<"godot::Object*",GDObject>>
 
 augment Rogue::GDObject
+  GLOBAL METHODS
+    method create->GDObject
+      return $defaultValue<<GDObject>>
+
+    method create<<$GodotType>>( new_parent=null:GDObject? )->GDObject
+      local result : GDObject
+      native @|$result.value = memnew( godot::$GodotType );
+      if (new_parent) new_parent.value.add( result )
+      return result
+
   METHODS
-    method cloned->GDObject
-      return query<<"Node",duplicate>>
+    method cloned( new_parent=null:GDObject? )->GDObject
+      local result = query<<"Node",duplicate>>
+      if (new_parent) new_parent.value.add( result )
+      return result
 
     method class_name->String
       return query<<"Object",get_class>>->String
@@ -44,8 +56,11 @@ augment Rogue::GDObject
     method get( node_path:String )->GDObject
       return query<<"Node",get_node_or_null>>( node_path )->GDObject
 
+    method has_meta( name:String )->Logical
+      return query<<"Node",has_meta>>( name )
+
     method has_method( name:String )->Logical
-      return query<<"Object",has_method>>
+      return query<<"Object",has_method>>( name )
 
     method instance_of<<$GodotType>>->Logical
       local result : Logical
@@ -73,16 +88,16 @@ augment Rogue::GDObject
     method set_pixel_scale( scale:Real )
       call<<"Sprite3D",set_pixel_size>>( scale )
 
-    method set_position( xy:XY )
-      call<<"Node2D",set_position>>( xy->RealXY )
+    method set_position( xy:IntXY )
+      call<<"Node2D",set_position>>( xy->XY )
       call<<"Node3D",set_position>>( XYZ(xy,0) )
 
-    method set_position( xy:RealXY )
+    method set_position( xy:XY )
       call<<"Node2D",set_position>>( xy )
       call<<"Node3D",set_position>>( XYZ(xy,0) )
 
     method set_position( xyz:XYZ )
-      call<<"Node2D",set_position>>( xyz->RealXY )
+      call<<"Node2D",set_position>>( xyz->XY )
       call<<"Node3D",set_position>>( xyz )
 
     method set_rotation( radians:Radians )
@@ -94,10 +109,10 @@ augment Rogue::GDObject
       call<<"Node3D",set_rotation>>( radians )
 
     method set_scale( scale:Real )
-      call<<"Node2D",set_scale>>( RealXY(scale,scale) )
+      call<<"Node2D",set_scale>>( XY(scale,scale) )
       call<<"Node3D",set_scale>>( XYZ(scale,scale,scale) )
 
-    method set_scale( scale:RealXY )
+    method set_scale( scale:XY )
       call<<"Node2D",set_scale>>( scale )
       call<<"Node3D",set_scale>>( XYZ(scale,1.0) )
 
@@ -108,9 +123,9 @@ augment Rogue::GDObject
     method set_z_index( value:Int32 )
       call<<"Node2D",set_z_index>>( value )
 
-    method size->XY
+    method size->IntXY
       if (this.instance_of<<"Texture2D">>) return query<<"Texture2D",get_size>>
-      return XY(0,0)
+      return IntXY(0,0)
 
     method sprite_frames->GDObject
       return query<<"AnimatedSprite2D",get_sprite_frames>>

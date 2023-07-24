@@ -18,15 +18,15 @@ augment Rogue::GDVariant
         case Value.TYPE_LOGICAL
           if (value->Logical) native @|$variant.value = (bool) 1;
           else                native @|$variant.value = (bool) 0;
+        case Value.TYPE_INTXY
+          local value = value->IntXY
+          native @|$variant.value = godot::Vector2i($value.x,$value.y);
         case Value.TYPE_XY
           local value = value->XY
-          native @|$variant.value = godot::Vector2i($value.x,$value.y);
-        case Value.TYPE_REALXY
-          local value = value->RealXY
           native @|$variant.value = godot::Vector2($value.x,$value.y);
         case Value.TYPE_BOX
           local value = value->Box
-          native @|$variant.value = godot::Rect2i( $value.position.x, $value.position.y, $value.size.x, $value.size.y );
+          native @|$variant.value = godot::Rect2( $value.position.x, $value.position.y, $value.size.x, $value.size.y );
         case Value.TYPE_STRING
           local value = value->String
           native @|godot::String st( $value->data->as_utf8 );
@@ -164,8 +164,8 @@ augment Rogue::GDVariant
     method to->String
       return this->Value->String
 
-    method to->XY
-      return this->Value->XY
+    method to->IntXY
+      return this->Value->IntXY
 
     method to->Value
       which ( native("(RogueInt32) $this.value.get_type()")->Int32 )
@@ -190,31 +190,23 @@ augment Rogue::GDVariant
           return native("RogueString_create( ((godot::String)$this.value).utf8().get_data() )")->String
 
         case native("godot::Variant::Type::VECTOR2")->LiteralInt32
-          local result : RealXY
+          local result : XY
           native @|godot::Vector2 v = $this.value;
                   |$result.x = v.x;
                   |$result.y = v.y;
           return result
 
         case native("godot::Variant::Type::VECTOR2I")->LiteralInt32
-          local result : XY
+          local result : IntXY
           native @|godot::Vector2i v = $this.value;
                   |$result.x = v.x;
                   |$result.y = v.y;
           return result
 
-        case native("godot::Variant::Type::RECT2")->LiteralInt32
+        case native("godot::Variant::Type::RECT2")->LiteralInt32,
+             native("godot::Variant::Type::RECT2I")->LiteralInt32
           local result : Box
           native @|godot::Rect2 r = $this.value;
-                  |$result.position.x = (RogueInt32) r.position.x;
-                  |$result.position.y = (RogueInt32) r.position.y;
-                  |$result.size.x = (RogueInt32) r.size.x;
-                  |$result.size.y = (RogueInt32) r.size.y;
-          return result
-
-        case native("godot::Variant::Type::RECT2I")->LiteralInt32
-          local result : Box
-          native @|godot::Rect2i r = $this.value;
                   |$result.position.x = r.position.x;
                   |$result.position.y = r.position.y;
                   |$result.size.x = r.size.x;

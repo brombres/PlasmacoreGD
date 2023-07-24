@@ -2,14 +2,17 @@ module Plasmacore
 
 class Display [singleton]
   PROPERTIES
-    size      : XY
+    size      : IntXY
 
   METHODS
-    method bounds->Box
-      return Box( size )
+    method bounds->IntBox
+      return IntBox( size )
 
-    method center->RealXY
+    method center->XY
       return size / 2.0
+
+    method height->Int32
+      return size.y
 
     method is_tablet->Logical
       if ($target("iOS"))
@@ -20,4 +23,7 @@ class Display [singleton]
       else
         return false
       endIf
+
+    method width->Int32
+      return size.x
 endClass
