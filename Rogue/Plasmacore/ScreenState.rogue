@@ -2,7 +2,7 @@ module Plasmacore
 
 uses Control/State
 
-class ViewState : State<<ViewState>> [singleton]
+class ScreenState : State<<ScreenState>> [singleton]
   # Primary overrideable methods:
   # method on_start
   # method on_finish
@@ -16,7 +16,7 @@ class ViewState : State<<ViewState>> [singleton]
   METHODS
     method graphic( name:String )->Graphic
       # Loads a Graphic while adding it to an internal list where the Graphic is automatically
-      # deleted when the ViewState changes.
+      # deleted when the ScreenState changes.
       local result = Graphic( name )
       _graphics.add( result )
       return result
@@ -37,11 +37,11 @@ class ViewState : State<<ViewState>> [singleton]
 
     method update( _dt:Real )
       dt = _dt
-      ViewState = this.updated
+      ScreenState = this.updated
 
-    method updated->ViewState [override]
+    method updated->ScreenState [override]
       local result = prior.updated
-      if (not result) result = ViewState()
+      if (not result) result = ScreenState()
       return result
 
     method _handle_finish [override]

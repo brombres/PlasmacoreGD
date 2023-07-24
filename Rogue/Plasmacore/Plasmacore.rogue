@@ -9,8 +9,8 @@ $include Plasmacore/Box
 $include Plasmacore/Display
 $include Plasmacore/Graphic
 $include Plasmacore/Godot
-$include Plasmacore/View
-$include Plasmacore/ViewState
+$include Plasmacore/Screen
+$include Plasmacore/ScreenState
 
 class Plasmacore [essential api singleton]
   PROPERTIES
@@ -51,9 +51,9 @@ class Plasmacore [essential api singleton]
       on_message( "Plasmacore.update", (args) => Plasmacore.on_update(args[0],args[1]) )
 
     method on_draw
-      ViewState.on_draw
-      View.on_draw
-      ViewState.after_draw
+      ScreenState.on_draw
+      Screen.on_draw
+      ScreenState.after_draw
 
     method on_message( name:String, handler:Function(GDVariant)->GDVariant )
       message_handlers[ name ] = handler
@@ -75,7 +75,7 @@ class Plasmacore [essential api singleton]
       if (is_2d) gd_graphics = GDObject.create<<"Node2D">>( gd_config )
       else       gd_graphics = GDObject.create<<"Node3D">>( gd_config )
 
-      ViewState.on_scene_change
+      ScreenState.on_scene_change
 
     method on_update( dt:Real64, display_size:IntXY )
       Display.size = display_size
@@ -83,8 +83,8 @@ class Plasmacore [essential api singleton]
 
       on_update_begin
 
-      ViewState.update( dt )
-      View.update( dt )
+      ScreenState.update( dt )
+      Screen.update( dt )
 
       on_update_end
 

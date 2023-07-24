@@ -1,11 +1,11 @@
 module Plasmacore
 
-class View [singleton]
+class Screen [singleton]
   GLOBAL PROPERTIES
     dt : Real
 
   GLOBAL METHODS
-    method on_singleton_change( old_view:View, new_view:View )
+    method on_singleton_change( old_view:Screen, new_view:Screen )
       if (old_view) old_view._handle_finish
       if (new_view) new_view.on_start
 
@@ -15,13 +15,13 @@ class View [singleton]
   METHODS
     method graphic( name:String )->Graphic
       # Loads a Graphic while adding it to an internal list where the Graphic is automatically
-      # deleted when the View changes.
+      # deleted when the Screen changes.
       local result = Graphic( name )
       _graphics.add( result )
       return result
 
     method get( name:String )->Graphic
-      # Allows view//DName <-> view.graphic("DName")
+      # Allows screen//DName <-> screen.graphic("DName")
       return graphic( name )
 
     method on_draw
