@@ -5,12 +5,37 @@ class Graphic [essential]
     lookup       : [String:GDObject]
     next_z_index : Int32
 
+    active_list : Graphic[]
+
+  GLOBAL METHODS
+    method on_begin_update
+      ensure<<active_list>>
+      (forEach in active_list).is_presented = false
+
+    method on_end_update
+      ensure<<active_list>>
+      forEach (graphic in rewriter=active_list.rewriter)
+        if (graphic.is_presented)
+          # Keep in the active list
+          rewriter.write( graphic )
+        else
+          # Will be removed from the active list
+          graphic.is_active = false
+          graphic.is_visible = false
+        endIf
+      endForEach
+
   PROPERTIES
     node : GDObject
 
     position : XYZ
     scale    = XYZ(1,1,1)
     rotation : XYZ
+
+    base_size : XY
+
+    is_active    : Logical
+    is_presented : Logical
 
   METHODS
     method init( name:String )
@@ -40,17 +65,21 @@ class Graphic [essential]
     method init( node )
       if (node)
         Plasmacore.gd_config.add( node )
-        node.visible = true
         node.pixel_scale = 1.0  # only affects Sprite3D
+        base_size = find_base_size
       endIf
 
     method cloned->Graphic
-      return Graphic( node.cloned )
+      return Graphic( node.cloned.[is_visible=false] )
 
     method on_cleanup
       delete
 
-    method base_size->XY
+    method find_base_size->XY
+      if (node.has_method("get_size"))
+        return node( "get_size" )
+      endIf
+
       if local size = node.meta( "size" )
         return size
       endIf
@@ -60,7 +89,8 @@ class Graphic [essential]
           return frame.size
         endIf
       endIf
-      return XY(0,0)
+
+      return XY(100,100)
 
     method delete
       if (node)
@@ -71,7 +101,17 @@ class Graphic [essential]
         node = GDObject()
       endIf
 
-    method draw
+    method is_visible->Logical
+      return node.visible
+
+    method present
+      if (not is_active)
+        ensure<<active_list>>
+        active_list.add( this )
+        is_visible = true
+        is_active = true
+      endIf
+
       if (Plasmacore.is_2dx)
         node.position = XYZ( position.x, Display.size.y - position.y )
       else
@@ -84,9 +124,17 @@ class Graphic [essential]
         ++next_z_index
       endIf
 
+      is_presented = true
+
+    method set_is_visible( setting:Logical )
+      node.visible = setting
+
     method set_scale( s:Real64 )
       @scale = XYZ( s, s, s )
 
     method set_scale( @scale )
+
+      #method set_size( sz:Real64 )
+      #set_size( XYZ(sz,sz,sz) )
 
 endClass
