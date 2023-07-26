@@ -6,6 +6,8 @@ nativeHeader @|#include <godot_cpp/classes/node.hpp>
 nativeHeader @|#include <godot_cpp/classes/node2d.hpp>
 nativeHeader @|#include <godot_cpp/classes/node3d.hpp>
 nativeHeader @|#include <godot_cpp/classes/object.hpp>
+nativeHeader @|#include <godot_cpp/classes/packed_scene.hpp>
+nativeHeader @|#include <godot_cpp/classes/resource_loader.hpp>
 nativeHeader @|#include <godot_cpp/classes/sprite3d.hpp>
 nativeHeader @|#include <godot_cpp/classes/sprite_frames.hpp>
 nativeHeader @|#include <godot_cpp/variant/string.hpp>

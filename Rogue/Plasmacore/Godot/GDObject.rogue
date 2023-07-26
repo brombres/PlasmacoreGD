@@ -13,6 +13,20 @@ augment Rogue::GDObject
       if (new_parent) new_parent.value.add( result )
       return result
 
+    method load_scene( res_path:String )->GDObject
+      local v_result : GDVariant
+      local v_res_path = GDVariant( res_path )
+
+      native
+        @|if (godot::ResourceLoader::get_singleton()->exists($v_res_path.value))
+         |{
+         |  godot::Ref<godot::PackedScene> packed_scene = godot::ResourceLoader::get_singleton()->load( $v_res_path.value );
+         |  $v_result.value = packed_scene.ptr()->instantiate();
+         |}
+
+      return v_result->GDObject
+
+
   METHODS
     method cloned( new_parent=null:GDObject? )->GDObject
       local result = query<<"Node",duplicate>>
@@ -23,6 +37,8 @@ augment Rogue::GDObject
       return query<<"Object",get_class>>->String
 
     method add( child:GDObject )
+      local parent = child.parent
+      if (parent) parent.remove( child )
       call<<"Node",add_child,"Node">>( child )
 
     method call( method_name:String, args=undefined:Value )->Value
@@ -67,6 +83,10 @@ augment Rogue::GDObject
       native @|if ($this.value) $result = !!godot::Object::cast_to<godot::$GodotType>( $this.value );
       return result
 
+    method is_visible->Logical
+      if (query<<"Node2D",is_visible>>) return true
+      return (query<<"Node3D",is_visible>>)
+
     method meta( name:String )->Value
       return query<<"Object",get_meta>>( name )
 
@@ -90,31 +110,24 @@ augment Rogue::GDObject
 
     method set_position( xy:IntXY )
       call<<"Node2D",set_position>>( xy->XY )
-      call<<"Node3D",set_position>>( XYZ(xy,0) )
 
     method set_position( xy:XY )
       call<<"Node2D",set_position>>( xy )
-      call<<"Node3D",set_position>>( XYZ(xy,0) )
 
     method set_position( xyz:XYZ )
-      call<<"Node2D",set_position>>( xyz->XY )
       call<<"Node3D",set_position>>( xyz )
 
     method set_rotation( radians:Radians )
       call<<"Node2D",set_rotation>>( radians )
-      call<<"Node3D",set_rotation>>( XYZ(0,0,radians) )
 
     method set_rotation( radians:XYZ )
-      call<<"Node2D",set_rotation>>( radians.z )
       call<<"Node3D",set_rotation>>( radians )
-
-    method set_scale( scale:Real )
-      call<<"Node2D",set_scale>>( XY(scale,scale) )
-      call<<"Node3D",set_scale>>( XYZ(scale,scale,scale) )
 
     method set_scale( scale:XY )
       call<<"Node2D",set_scale>>( scale )
-      call<<"Node3D",set_scale>>( XYZ(scale,1.0) )
+
+    method set_scale( scale:XYZ )
+      call<<"Node3D",set_scale>>( scale )
 
     method set_visible( setting:Logical )
       call<<"Node2D",set_visible>>( setting )
