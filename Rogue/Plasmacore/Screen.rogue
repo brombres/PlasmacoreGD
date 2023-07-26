@@ -6,23 +6,13 @@ class Screen [singleton]
 
   GLOBAL METHODS
     method on_singleton_change( old_view:Screen, new_view:Screen )
-      if (old_view) old_view._handle_finish
-      if (new_view) new_view.on_start
-
-  PROPERTIES
-    _graphics = Graphic[]
+      if (old_view) old_view.finish
+      if (new_view) new_view.start
 
   METHODS
-    method graphic( name:String )->Graphic
-      # Loads a Graphic while adding it to an internal list where the Graphic is automatically
-      # deleted when the Screen changes.
-      local result = Graphic( name )
-      _graphics.add( result )
-      return result
-
-    method get( name:String )->Graphic
-      # Allows screen//DName <-> screen.graphic("DName")
-      return graphic( name )
+    method finish
+      on_finish
+      Graphics.on_unload
 
     method on_draw
 
@@ -32,13 +22,12 @@ class Screen [singleton]
 
     method on_update
 
+    method start
+      Graphics.on_load
+      on_start
+
     method update( _dt:Real )
       dt = _dt
       on_update
-
-    method _handle_finish
-      (forEach in _graphics).delete
-      _graphics.clear
-      on_finish
 
 endClass

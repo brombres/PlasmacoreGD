@@ -8,6 +8,7 @@ $include Plasmacore/App
 $include Plasmacore/Box
 $include Plasmacore/Display
 $include Plasmacore/Graphic
+$include Plasmacore/Graphics
 $include Plasmacore/Godot
 $include Plasmacore/Screen
 $include Plasmacore/ScreenState
@@ -70,7 +71,6 @@ class Plasmacore [essential api singleton]
 
     method on_update( dt:Real64, display_size:IntXY )
       Display.size = display_size
-      Graphic.next_z_index = 1
 
       on_update_begin
 
@@ -80,9 +80,9 @@ class Plasmacore [essential api singleton]
       on_update_end
 
     method on_update_begin
-      Graphic.on_update_begin
+      Graphics.on_update_begin
 
     method on_update_end
-      Graphic.on_update_end
+      Graphics.on_update_end
 
 endClass

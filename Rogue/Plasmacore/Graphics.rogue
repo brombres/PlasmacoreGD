@@ -1,0 +1,55 @@
+module Plasmacore
+
+class Graphics [singleton]
+  GLOBAL PROPERTIES
+    next_z_index : Int32
+
+  PROPERTIES
+    singletons = [String:Graphic]
+    clonables  = [String:Graphic]
+
+    actively_drawing = Graphic[]
+
+    loaded = Graphic[]
+
+  METHODS
+    method load( name:String )->Graphic
+      # Loads a Graphic while adding it to an internal list to be deleted when the Screen changes.
+      local result = Graphic( name )
+      loaded.add( result )
+      return result
+
+    method get( name:String )->Graphic
+      # Allows Graphcs//DName <-> Graphics.load("DName")
+      return load( name )
+
+    method on_load
+
+    method on_unload
+      (forEach in loaded).delete
+      loaded.clear
+
+    method on_update_begin
+      next_z_index = 1
+      forEach (graphic in actively_drawing)
+        graphic.draw_pool.add( graphic.draw_list )
+        graphic.draw_list.clear
+      endForEach
+
+    method on_update_end
+      forEach (graphic in rewriter=actively_drawing.rewriter)
+        forEach (node in graphic.draw_pool)
+          # Delete nodes left unused this cycle
+          node.visible = false
+          node.delete
+        endForEach
+        graphic.draw_pool.clear
+
+        if (graphic.draw_list.count)
+          rewriter.write( graphic )
+        else
+          graphic.is_actively_drawing = false
+        endIf
+      endForEach
+
+endClass

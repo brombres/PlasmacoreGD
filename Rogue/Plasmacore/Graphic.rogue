@@ -1,10 +1,6 @@
 module Plasmacore
 
 class Graphic [essential]
-  GLOBAL PROPERTIES
-    singletons = [String:Graphic]
-    clonables  = [String:Graphic]
-
   PROPERTIES
     node      : GDObject
 
@@ -18,20 +14,20 @@ class Graphic [essential]
     base_size  = XYZ(1,1,1)
     base_scale = XYZ(1,1,1)
 
-    is_active    : Logical
-    is_presented : Logical
+    is_singleton : Logical
+    is_actively_drawing : Logical
 
   GLOBAL METHODS
     method create( name:String )->Graphic
-      local entry = singletons.find( name )
+      local entry = Graphics.singletons.find( name )
       if (entry) return entry.value
 
-      entry = clonables.find( name )
+      entry = Graphics.clonables.find( name )
       if (entry) return entry.value.cloned
 
       if (name.begins_with("res://"))
         local result = Graphic( GDObject.load_scene("res://Assets/Tiles/Wall.tscn") )
-        clonables[ name ] = result
+        Graphics.clonables[ name ] = result
         Plasmacore.gd_graphics.add( result.node )
         return result
 
@@ -46,18 +42,17 @@ class Graphic [essential]
           necessary (node)
 
         satisfied
-          block
-            local result = Graphic( node )
-            clonables[ name ] = result
-            Plasmacore.gd_graphics.add( node )
-            return result
-          endBlock
+          local result = Graphic( node )
+          Graphics.clonables[ name ] = result
+          Plasmacore.gd_graphics.add( node )
+          return result
 
         unsatisfied
           node = Plasmacore.gd_scene[name]
           if (node)
             local result = Graphic( node )
-            singletons[ name ] = result
+            Graphics.singletons[ name ] = result
+            result.is_singleton = true
             return result
           endIf
 
@@ -114,10 +109,12 @@ class Graphic [essential]
 
     method delete
       if (node)
-        if (node.parent)
-          node.parent.remove( node )
+        if (not is_singleton)
+          if (node.parent)
+            node.parent.remove( node )
+          endIf
+          node.delete
         endIf
-        node.delete
         node = GDObject()
       endIf
 
@@ -137,18 +134,21 @@ class Graphic [essential]
         copy.position = position
       endIf
 
-      copy.scale = base_scale * XYZ(scale,1)
-      copy.rotation = XYZ( this.rotation->XY, rotation.value )
+      copy.scale = base_scale * scale
+      copy.rotation = rotation.value
 
       if (Plasmacore.is_2d)
-        copy.z_index = next_z_index
-        ++next_z_index
+        copy.z_index = Graphics.next_z_index
+        ++Graphics.next_z_index
       endIf
 
       if (not draw_list)
         ensure<<draw_list>>
         ensure<<draw_pool>>
-        Plasmacore.active_drawing.add( this )
+      endIf
+      if (not is_actively_drawing)
+        is_actively_drawing = true
+        Graphics.actively_drawing.add( this )
       endIf
       draw_list.add( copy )
 
@@ -158,41 +158,13 @@ class Graphic [essential]
     method is_visible->Logical
       return node.is_visible
 
-    method on_update_draw_list_begin
-      draw_pool.add( draw_list )
-      draw_list.clear
-
-    method on_update_draw_list_end->Logical
-      # Returns 'true' if still active
-      forEach (node in draw_pool)
-        # Delete nodes left unused this cycle
-        node.visible = false
-        node.delete
-      endForEach
-
-      if (draw_list.count) return true
-
-      draw_list = null
-      draw_pool = null
-      return false
-
-    method place
+    method present
       if (Plasmacore.is_2d)
-        node.z_index = next_z_index
-        ++next_z_index
+        node.z_index = Graphics.next_z_index
+        ++Graphics.next_z_index
       endIf
 
       is_visible = true
-
-    method present
-      if (not is_active)
-        Plasmacore.active_graphics.add( this )
-        is_active = true
-      endIf
-
-      place
-
-      is_presented = true
 
     method present( position )
       present
@@ -258,42 +230,4 @@ class Graphic [essential]
     method to->String
       if (node) return node.name
       return "(Undefined Graphic)"
-
-  GLOBAL PROPERTIES
-    next_z_index : Int32
-
-    active_graphics = Graphic[]
-    # When an inactive (untracked) graphic is first presented it marks itself active and presented,
-    # makes itself visible, and adds itself to this list.
-    #
-    # At the beginning of each update, all active_graphics are marked as not presented.
-    #
-    # Previously-active graphics that present again simply mark themselves as presented.
-    #
-    # At the end of each update, all active_graphics that have not been presented are marked
-    # inactive, made invisible, and removed from the active_graphics list.
-
-    active_drawing = Graphic[]
-
-  GLOBAL METHODS
-    method on_update_begin
-      (forEach in active_graphics).is_presented = false
-      (forEach in active_drawing).on_update_draw_list_begin
-
-    method on_update_end
-      forEach (graphic in rewriter=active_graphics.rewriter)
-        if (graphic.is_presented)
-          # Keep in the active list
-          rewriter.write( graphic )
-        else
-          # Remove from the active list
-          graphic.is_active = false
-          graphic.is_visible = false
-        endIf
-      endForEach
-
-      forEach (graphic in rewriter=active_drawing.rewriter)
-        if (graphic.on_update_draw_list_end) rewriter.write( graphic )
-      endForEach
-
 endClass
