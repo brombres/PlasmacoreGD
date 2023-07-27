@@ -37,9 +37,11 @@ augment Rogue::GDObject
       return query<<"Object",get_class>>->String
 
     method add( child:GDObject )
-      local parent = child.parent
-      if (parent) parent.remove( child )
-      call<<"Node",add_child,"Node">>( child )
+      if (child)
+        local parent = child.parent
+        if (parent) parent.remove( child )
+        call<<"Node",add_child,"Node">>( child )
+      endIf
 
     method call( method_name:String, args=undefined:Value )->Value
       if (not this) return undefined

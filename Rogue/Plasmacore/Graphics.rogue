@@ -13,15 +13,9 @@ class Graphics [singleton]
     loaded = Graphic[]
 
   METHODS
-    method load( name:String )->Graphic
-      # Loads a Graphic while adding it to an internal list to be deleted when the Screen changes.
-      local result = Graphic( name )
-      loaded.add( result )
-      return result
-
     method get( name:String )->Graphic
       # Allows Graphcs//DName <-> Graphics.load("DName")
-      return load( name )
+      return Graphic( name )
 
     method on_load
 

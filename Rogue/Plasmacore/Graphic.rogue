@@ -66,6 +66,7 @@ class Graphic [essential]
       if (node)
         base_size = find_base_size
       endIf
+      Graphics.loaded.add( this )
 
     method init( existing:Graphic )
       this.node = existing.node.cloned.[ visible=false ]
@@ -75,6 +76,7 @@ class Graphic [essential]
       this.base_size = existing.base_size
       this.base_scale = existing.base_scale
       existing.node.parent.add( this.node )
+      Graphics.loaded.add( this )
 
     method cloned->Graphic
       return Graphic( this )
@@ -166,6 +168,13 @@ class Graphic [essential]
 
       is_visible = true
 
+    method present( position:IntXY )
+      present( position->XY )
+
+    method present( position:XY )
+      this.position = position
+      present
+
     method present( position )
       present
 
@@ -180,6 +189,9 @@ class Graphic [essential]
 
     method set_base_size( xy:XY )
       @base_size = XYZ( xy, 1 )
+
+    method set_position( xy:IntXY )
+      set_position( xy->XY )
 
     method set_position( xy:XY )
       @position = XYZ( xy, position.z )

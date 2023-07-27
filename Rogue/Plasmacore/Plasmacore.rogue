@@ -57,15 +57,12 @@ class Plasmacore [essential api singleton]
       is_3d = (mode == 3)
 
       gd_scene  = gd_root.last
-
-      #{
       gd_assets = gd_config//Assets
       if (gd_assets) gd_assets_graphics = gd_assets//Graphics
 
       if (is_2d) gd_graphics = GDObject.create<<"Node2D">>( gd_config )
       else       gd_graphics = GDObject.create<<"Node3D">>( gd_config )
       gd_graphics.name = "Graphics"
-      }#
 
       ScreenState.on_scene_change
 
