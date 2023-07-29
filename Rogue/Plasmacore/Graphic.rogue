@@ -26,7 +26,7 @@ class Graphic [essential]
       if (entry) return entry.value.cloned
 
       if (name.begins_with("res://"))
-        local result = Graphic( GDObject.load_scene("res://Assets/Tiles/Wall.tscn") )
+        local result = Graphic( GDObject.load_scene(name) )
         Graphics.clonables[ name ] = result
         Plasmacore.gd_graphics.add( result.node )
         return result
@@ -69,7 +69,7 @@ class Graphic [essential]
       Graphics.loaded.add( this )
 
     method init( existing:Graphic )
-      this.node = existing.node.cloned.[ visible=false ]
+      this.node = existing.node.cloned
       this.@position = existing.position
       this.@scale = existing.scale
       this.@rotation = existing.rotation
@@ -86,7 +86,6 @@ class Graphic [essential]
 
     method add( child:Graphic )
       node.add( child.node )
-      if (is_visible) child.is_visible = true
 
     method find_base_size->XYZ
       if (node.has_method("get_size"))
@@ -102,7 +101,7 @@ class Graphic [essential]
       endIf
 
       if local frames = node.sprite_frames
-        if local frame = frames.texture("",0)
+        if local frame = frames.texture("default",0)
           return XYZ( frame.size, 1 )
         endIf
       endIf
@@ -166,10 +165,9 @@ class Graphic [essential]
         ++Graphics.next_z_index
       endIf
 
-      is_visible = true
-
     method present( position:IntXY )
-      present( position->XY )
+      this.position = position
+      present
 
     method present( position:XY )
       this.position = position
