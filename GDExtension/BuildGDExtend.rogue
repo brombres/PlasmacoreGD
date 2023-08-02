@@ -949,13 +949,13 @@ class CreateClass
          |{
          |}
          |
-         |Camera3D* Plasmacore::get_camera()
+         |Camera3D* <NAME>::get_camera()
          |{
          |  // Result can be 'nullptr'.
          |  return Object::cast_to<Camera3D>( ObjectDB::get_instance(camera) );
          |}
          |
-         |void Plasmacore::set_camera( Camera3D* p_camera )
+         |void <NAME>::set_camera( Camera3D* p_camera )
          |{
          |  camera = p_camera ? p_camera->get_instance_id() : ObjectID();
          |}

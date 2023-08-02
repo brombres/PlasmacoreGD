@@ -1,4 +1,4 @@
-module Plasmacore
+module RogueGD
 
 class Graphic [essential]
   PROPERTIES
@@ -28,27 +28,27 @@ class Graphic [essential]
       if (name.begins_with("res://"))
         local result = Graphic( GDObject.load_scene(name) )
         Graphics.clonables[ name ] = result
-        Plasmacore.gd_graphics.add( result.node )
+        RogueGD.gd_graphics.add( result.node )
         return result
 
       else
         local node : GDObject
 
         contingent
-          if (Plasmacore.gd_assets_graphics) node = Plasmacore.gd_assets_graphics[name]
+          if (RogueGD.gd_assets_graphics) node = RogueGD.gd_assets_graphics[name]
           sufficient (node)
 
-          if (Plasmacore.gd_assets) node = Plasmacore.gd_assets[name]
+          if (RogueGD.gd_assets) node = RogueGD.gd_assets[name]
           necessary (node)
 
         satisfied
           local result = Graphic( node )
           Graphics.clonables[ name ] = result
-          Plasmacore.gd_graphics.add( node )
+          RogueGD.gd_graphics.add( node )
           return result
 
         unsatisfied
-          node = Plasmacore.gd_scene[name]
+          node = RogueGD.gd_scene[name]
           if (node)
             local result = Graphic( node )
             Graphics.singletons[ name ] = result
@@ -129,7 +129,7 @@ class Graphic [essential]
         copy.visible = true
       endIf
 
-      if (Plasmacore.is_2dx)
+      if (RogueGD.is_2dx)
         copy.position = XYZ( position.x, Display.size.y - position.y )
       else
         copy.position = position
@@ -138,7 +138,7 @@ class Graphic [essential]
       copy.scale = base_scale * scale
       copy.rotation = rotation.value
 
-      if (Plasmacore.is_2d)
+      if (RogueGD.is_2d)
         copy.z_index = Graphics.next_z_index
         ++Graphics.next_z_index
       endIf
@@ -160,7 +160,7 @@ class Graphic [essential]
       return node.is_visible
 
     method present
-      if (Plasmacore.is_2d)
+      if (RogueGD.is_2d)
         node.z_index = Graphics.next_z_index
         ++Graphics.next_z_index
       endIf
@@ -193,7 +193,7 @@ class Graphic [essential]
 
     method set_position( xy:XY )
       @position = XYZ( xy, position.z )
-      if (Plasmacore.is_2dx)
+      if (RogueGD.is_2dx)
         node.position = XYZ( xy.x, Display.size.y - xy.y, position.z )
       else
         node.position = xy
@@ -201,21 +201,21 @@ class Graphic [essential]
 
     method set_position( xyz:XYZ )
       @position = xyz
-      if (Plasmacore.is_2dx)
+      if (RogueGD.is_2dx)
         node.position = XYZ( xyz.x, Display.size.y - xyz.y, xyz.z )
       else
         node.position = xyz
       endIf
 
     method set_rotation( z:Radians )
-      if (Plasmacore.is_2d) rotation = z
+      if (RogueGD.is_2d) rotation = z
       else                  rotation = XYZ( 0, 0, z )
 
     method set_rotation( @rotation )
       node.rotation = rotation
 
     method set_scale( s:Real64 )
-      if (Plasmacore.is_2d) scale = XY( s, s )
+      if (RogueGD.is_2d) scale = XY( s, s )
       else                  scale = XYZ( s, s, s )
 
     method set_scale( xy:XY )

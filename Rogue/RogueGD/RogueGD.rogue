@@ -1,19 +1,19 @@
-module Plasmacore
+module RogueGD
 
 uses Geometry [export]
 uses Graphics [export]
 uses Math/Best
 
-$include Plasmacore/App
-$include Plasmacore/Box
-$include Plasmacore/Display
-$include Plasmacore/Graphic
-$include Plasmacore/Graphics
-$include Plasmacore/Godot
-$include Plasmacore/Screen
-$include Plasmacore/ScreenState
+$include RogueGD/App
+$include RogueGD/Box
+$include RogueGD/Display
+$include RogueGD/Graphic
+$include RogueGD/Graphics
+$include RogueGD/Godot
+$include RogueGD/Screen
+$include RogueGD/ScreenState
 
-class Plasmacore [essential api singleton]
+class RogueGD [essential api singleton]
   PROPERTIES
     is_2d  : Logical
     is_2dx : Logical
@@ -34,9 +34,9 @@ class Plasmacore [essential api singleton]
     method init
       Global.output = Log
       Global.error = ErrorLog
-      on_message( "Plasmacore.begin_new_scene", (args) => Plasmacore.on_new_scene(args[0],args[1],args[2],args[3]) )
-      on_message( "Plasmacore.draw",   (args) => Plasmacore.on_draw )
-      on_message( "Plasmacore.update", (args) => Plasmacore.on_update(args[0],args[1]) )
+      on_message( "RogueGD.begin_new_scene", (args) => RogueGD.on_new_scene(args[0],args[1],args[2],args[3]) )
+      on_message( "RogueGD.draw",   (args) => RogueGD.on_draw )
+      on_message( "RogueGD.update", (args) => RogueGD.on_update(args[0],args[1]) )
 
     method on_draw
       ScreenState.on_draw

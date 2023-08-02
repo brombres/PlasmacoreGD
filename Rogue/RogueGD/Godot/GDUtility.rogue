@@ -1,4 +1,4 @@
-module Plasmacore
+module RogueGD
 
 NATIVE_POINTER_TYPE<<GDArrayPointer,   "godot::Array*">>
 NATIVE_POINTER_TYPE<<GDVariantPointer, "godot::Variant*">>

@@ -1,4 +1,4 @@
-module Plasmacore
+module RogueGD
 
 ROGUE_NATIVE_POINTER_TYPE<<"godot::Object*",GDObject>>
 

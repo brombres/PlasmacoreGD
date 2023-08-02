@@ -1,4 +1,4 @@
-module Plasmacore
+module RogueGD
 
 class Display [singleton]
   PROPERTIES

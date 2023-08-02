@@ -1,8 +1,8 @@
 // REFERENCE
 // https://docs.godotengine.org/en/stable/contributing/development/core_and_modules/object_class.html
 
-#ifndef PLASMACORE_H
-#define PLASMACORE_H
+#ifndef ROGUEGD_H
+#define ROGUEGD_H
 
 #ifdef WIN32
 	#include <windows.h>
@@ -15,9 +15,9 @@
 
 using namespace godot;
 
-class NativePlasmacore : public RefCounted
+class NativeRogueGD : public RefCounted
 {
-	GDCLASS( NativePlasmacore, RefCounted );
+	GDCLASS( NativeRogueGD, RefCounted );
 
 	protected:
 		static void _bind_methods();
@@ -26,11 +26,11 @@ class NativePlasmacore : public RefCounted
 		// PROPERTIES
 
 		// CONSTRUCTOR METHODS
-		NativePlasmacore();
-		~NativePlasmacore();
+		NativeRogueGD();
+		~NativeRogueGD();
 
     void launch();
     godot::Variant call( godot::Variant name, godot::Variant args );
 };
 
-#endif // PLASMACORE_H
+#endif // ROGUEGD_H

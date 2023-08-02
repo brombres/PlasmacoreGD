@@ -1,4 +1,4 @@
-module Plasmacore
+module RogueGD
 
 nativeHeader @|#include <godot_cpp/classes/animated_sprite2d.hpp>
 nativeHeader @|#include <godot_cpp/classes/control.hpp>

@@ -1,4 +1,4 @@
-module Plasmacore
+module RogueGD
 
 nativeType<<"godot::Variant">> GDVariant
 

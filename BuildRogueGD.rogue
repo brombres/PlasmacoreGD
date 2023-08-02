@@ -41,8 +41,8 @@ routine rogo_build_rogue
   rogo_deps
   local source = Files(".")
   source.add( "Source/**/*.rogue" )
-  source.add( "Libraries/PlasmacoreGD/Rogue/**/*.rogue" )
-  if (source.any_newer_than(File("Libraries/PlasmacoreGD/GDExtension/Source/Generated/RogueProgram.h")))
+  source.add( "Libraries/RogueGD/Rogue/**/*.rogue" )
+  if (source.any_newer_than(File("Libraries/RogueGD/GDExtension/Source/Generated/RogueProgram.h")))
     rogo_compile_rogue
   endIf
 endRoutine
@@ -62,10 +62,10 @@ routine rogo_compile_rogue( platform="":String )
     platform = System.os
   endIf
 
-  local output = File( "Libraries/PlasmacoreGD/GDExtension/Source/Generated" )
+  local output = File( "Libraries/RogueGD/GDExtension/Source/Generated" )
   output.create_folder
-  local cmd = "roguec Source/Main Plasmacore --libraries=Libraries/PlasmacoreGD/Rogue --gc=manual --gc-threshold=4MB --output=$/RogueProgram"(output)
-  cmd .= appending( "--target=$,Plasmacore,C++"(platform) )
+  local cmd = "roguec Source/Main RogueGD --libraries=Libraries/RogueGD/Rogue --gc=manual --gc-threshold=4MB --output=$/RogueProgram"(output)
+  cmd .= appending( "--target=$,RogueGD,C++"(platform) )
   if (platform == "macOS" or platform == "iOS") cmd += ",ObjC"
   execute cmd
 endRoutine
@@ -127,19 +127,19 @@ routine copy_products( project_filepath:String )->Logical
 
 	local products =
 	[
-	  "Plasmacore.gd"
-		"PlasmacoreView2D.gd"
-		"PlasmacoreView2DX.gd"
-		"PlasmacoreView3D.gd"
+	  "RogueGD.gd"
+		"RogueView2D.gd"
+		"RogueView2DX.gd"
+		"RogueView3D.gd"
 	]
 
 	forEach (product in products)
-    if (copy(product, "Libraries/PlasmacoreGD/Godot", project_folder ))
+    if (copy(product, "Libraries/RogueGD/Godot", project_folder ))
 			synched_any = true
 		endIf
 	endForEach
 
-  if (copy("BuildPlasmacore.rogue", "Libraries/PlasmacoreGD", "." ))
+  if (copy("BuildRogueGD.rogue", "Libraries/RogueGD", "." ))
     synched_any = true
   endIf
 
@@ -166,7 +166,7 @@ routine patch_gitignore( patcher:GitIgnorePatcher )
   patcher.add( "# Rogo", "BuildLocal.rogue" )
   patcher.add( "# Rogo", "Local.rogo" )
 
-  patcher.add( "# Plasmacore", "/Libraries/PlasmacoreGD" )
+  patcher.add( "# RogueGD", "/Libraries/RogueGD" )
 
   patcher.add( "# Vim", "*.swo" )
   patcher.add( "# Vim", "*.swp" )
@@ -210,7 +210,7 @@ routine copy( filename:String, from_path:String, project_path:String )->Logical
 endRoutine
 
 routine subrogo( args="":String, &capture_output )->String
-  local cmd = "cd Libraries/PlasmacoreGD/GDExtension && rogo".appending(args)
+  local cmd = "cd Libraries/RogueGD/GDExtension && rogo".appending(args)
 	if (capture_output)
 		local result = Process.run( cmd, &env )
 		local output = result->String

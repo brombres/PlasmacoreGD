@@ -1,7 +1,7 @@
-class_name PlasmacoreView2DX
+class_name RogueView2DX
 extends Node3D
 
-## Optional Camera3D. If no camera is linked then Plasmacore will create a 3D camera at runtime.
+## Optional Camera3D. If no camera is linked then RogueGD will create a 3D camera at runtime.
 @export var camera:Camera3D
 
 ## Smaller nominal_z values exaggerate the effects of rotating into or moving along the Z axis
@@ -23,7 +23,7 @@ func _ready():
 	get_viewport().connect( "size_changed", _on_viewport_size_changed )
 	_on_viewport_size_changed()
 
-	Plasmacore.on_new_scene_2dx( 1, self )
+	RogueGD.on_new_scene_2dx( 1, self )
 
 func _on_viewport_size_changed():
 	var display_size = get_viewport().get_visible_rect().size

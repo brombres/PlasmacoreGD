@@ -1,4 +1,4 @@
-module Plasmacore
+module RogueGD
 
 uses Control/State
 
@@ -32,7 +32,7 @@ class ScreenState : State<<ScreenState>> [singleton]
       noAction
 
     method on_scene_change
-      # Plasmacore.gd_scene can be queried for .name and .filepath
+      # RogueGD.gd_scene can be queried for .name and .filepath
       noAction
 
     method update( _dt:Real )
