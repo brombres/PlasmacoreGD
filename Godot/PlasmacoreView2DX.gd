@@ -1,4 +1,4 @@
-class_name Plasmacore2DX
+class_name PlasmacoreView2DX
 extends Node3D
 
 ## Optional Camera3D. If no camera is linked then Plasmacore will create a 3D camera at runtime.

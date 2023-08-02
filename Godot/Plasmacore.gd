@@ -10,8 +10,12 @@ func _draw():
 
 func _process(delta):
 	var display_size = get_viewport().get_visible_rect().size
-	plasmacore.call( "Plasmacore.update", [delta,display_size] )
+	plasmacore.call( "Plasmacore.update", [delta,display_size]  )
 	queue_redraw()
 
 func on_new_scene( mode:int, config:Node ):
 	plasmacore.call( "Plasmacore.begin_new_scene", [mode,$/root,self,config] )
+
+func send( message_name, args ):
+	plasmacore.call( message_name, args )
+

@@ -1,4 +1,4 @@
-class_name Plasmacore3D
+class_name PlasmacoreView3D
 extends Node3D
 
 func _ready():
