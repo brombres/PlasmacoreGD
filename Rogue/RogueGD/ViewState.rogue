@@ -1,0 +1,10 @@
+module RogueGD
+
+uses Control/State
+
+class ViewState : State<<ViewState>> [singleton]
+	METHODS
+    method update
+			ViewState = which{ this.updated || ViewState() }
+
+endClass

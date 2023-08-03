@@ -14,7 +14,7 @@ void initialize_roguegd_types(ModuleInitializationLevel p_level)
   // MODULE_INITIALIZATION_LEVEL_SERVERS
   // MODULE_INITIALIZATION_LEVEL_SCENE
   // MODULE_INITIALIZATION_LEVEL_EDITOR
-  godot::UtilityFunctions::print( "[roguegd] Initializing (", p_level, ")" );
+  //godot::UtilityFunctions::print( "[roguegd] Initializing (", p_level, ")" );
 
   if (p_level != MODULE_INITIALIZATION_LEVEL_SCENE)
   {

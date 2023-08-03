@@ -10,6 +10,8 @@ nativeHeader @|#include <godot_cpp/classes/packed_scene.hpp>
 nativeHeader @|#include <godot_cpp/classes/resource_loader.hpp>
 nativeHeader @|#include <godot_cpp/classes/sprite3d.hpp>
 nativeHeader @|#include <godot_cpp/classes/sprite_frames.hpp>
+nativeHeader @|#include <godot_cpp/classes/viewport.hpp>
+
 nativeHeader @|#include <godot_cpp/variant/string.hpp>
 nativeHeader @|#include <godot_cpp/variant/string_name.hpp>
 nativeHeader @|#include <godot_cpp/variant/utility_functions.hpp>

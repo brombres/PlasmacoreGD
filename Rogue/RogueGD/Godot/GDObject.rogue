@@ -56,6 +56,12 @@ augment Rogue::GDObject
         return native( "ROGUE_COMPOUND(GDVariant){ $this.value->call($v_name.value, $v_arg.value) }" )->GDVariant
       endIf
 
+		method control_position->XY
+			return query<<"Control",get_position>>
+
+		method control_size->XY
+			return query<<"Control",get_size>>
+
     method count->Int32
       return query<<"Node",get_child_count>>->String
 
@@ -104,6 +110,9 @@ augment Rogue::GDObject
     method remove( child:GDObject )
       call<<"Node",remove_child, "Node">>( child )
 
+		method set_clip_children( setting:Logical )
+			call<<"Control",set_clip_contents>>( setting )
+
     method set_name( new_name:String )
       call<<"Node",set_name>>( new_name )
 
@@ -131,7 +140,7 @@ augment Rogue::GDObject
     method set_scale( scale:XYZ )
       call<<"Node3D",set_scale>>( scale )
 
-    method set_visible( setting:Logical )
+		method set_is_visible( setting:Logical )
       call<<"Node2D",set_visible>>( setting )
       call<<"Node3D",set_visible>>( setting )
 
@@ -150,6 +159,9 @@ augment Rogue::GDObject
 
     method to->String
       return name
+
+		method visible_bounds->Box
+			return query<<"Viewport",get_visible_rect>>
 
     method call<<$GodotType,$method_name>>
       native
@@ -262,6 +274,9 @@ augment Rogue::Value
         endIf
       endIf
       return GDObject()
+
+		method to->GDVariant
+			return GDVariant( this )
 endAugment
 
 

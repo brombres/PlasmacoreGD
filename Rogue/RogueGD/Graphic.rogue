@@ -2,10 +2,7 @@ module RogueGD
 
 class Graphic [essential]
   PROPERTIES
-    node      : GDObject
-
-    draw_list : GDObject[]
-    draw_pool : GDObject[]
+    node     : GDObject
 
     position : XYZ
     scale    = XYZ(1,1,1)
@@ -14,59 +11,11 @@ class Graphic [essential]
     base_size  = XYZ(1,1,1)
     base_scale = XYZ(1,1,1)
 
-    is_singleton : Logical
-    is_actively_drawing : Logical
-
-  GLOBAL METHODS
-    method create( name:String )->Graphic
-      local entry = Graphics.singletons.find( name )
-      if (entry) return entry.value
-
-      entry = Graphics.clonables.find( name )
-      if (entry) return entry.value.cloned
-
-      if (name.begins_with("res://"))
-        local result = Graphic( GDObject.load_scene(name) )
-        Graphics.clonables[ name ] = result
-        RogueGD.gd_graphics.add( result.node )
-        return result
-
-      else
-        local node : GDObject
-
-        contingent
-          if (RogueGD.gd_assets_graphics) node = RogueGD.gd_assets_graphics[name]
-          sufficient (node)
-
-          if (RogueGD.gd_assets) node = RogueGD.gd_assets[name]
-          necessary (node)
-
-        satisfied
-          local result = Graphic( node )
-          Graphics.clonables[ name ] = result
-          RogueGD.gd_graphics.add( node )
-          return result
-
-        unsatisfied
-          node = RogueGD.gd_scene[name]
-          if (node)
-            local result = Graphic( node )
-            Graphics.singletons[ name ] = result
-            result.is_singleton = true
-            return result
-          endIf
-
-        endContingent
-
-        return Graphic( node )  # undefined graphic
-      endIf
-
   METHODS
     method init( node )
       if (node)
         base_size = find_base_size
       endIf
-      Graphics.loaded.add( this )
 
     method init( existing:Graphic )
       this.node = existing.node.cloned
@@ -76,13 +25,9 @@ class Graphic [essential]
       this.base_size = existing.base_size
       this.base_scale = existing.base_scale
       existing.node.parent.add( this.node )
-      Graphics.loaded.add( this )
 
     method cloned->Graphic
       return Graphic( this )
-
-    method on_cleanup
-      delete
 
     method add( child:Graphic )
       node.add( child.node )
@@ -110,48 +55,9 @@ class Graphic [essential]
 
     method delete
       if (node)
-        if (not is_singleton)
-          if (node.parent)
-            node.parent.remove( node )
-          endIf
-          node.delete
-        endIf
+				node.delete
         node = GDObject()
       endIf
-
-    method draw( position:XY, rotation=Radians(0):Radians, scale=XY(1,1):XY )
-      local copy : GDObject
-
-      if (draw_pool and draw_pool.count)
-        copy = draw_pool.remove_last
-      else
-        copy = node.cloned( node.parent )
-        copy.visible = true
-      endIf
-
-      if (RogueGD.is_2dx)
-        copy.position = XYZ( position.x, Display.size.y - position.y )
-      else
-        copy.position = position
-      endIf
-
-      copy.scale = base_scale * scale
-      copy.rotation = rotation.value
-
-      if (RogueGD.is_2d)
-        copy.z_index = Graphics.next_z_index
-        ++Graphics.next_z_index
-      endIf
-
-      if (not draw_list)
-        ensure<<draw_list>>
-        ensure<<draw_pool>>
-      endIf
-      if (not is_actively_drawing)
-        is_actively_drawing = true
-        Graphics.actively_drawing.add( this )
-      endIf
-      draw_list.add( copy )
 
     method get( name:String )->Graphic
       return Graphic( node[name] )
@@ -160,7 +66,7 @@ class Graphic [essential]
       return node.is_visible
 
     method present
-      if (RogueGD.is_2d)
+			if (View.mode == View.MODE_2D)
         node.z_index = Graphics.next_z_index
         ++Graphics.next_z_index
       endIf
@@ -181,7 +87,7 @@ class Graphic [essential]
       size = box.size
 
     method set_is_visible( setting:Logical )
-      node.visible = setting
+			node.is_visible = setting
 
     method set_base_size( @base_size )
 
@@ -193,7 +99,7 @@ class Graphic [essential]
 
     method set_position( xy:XY )
       @position = XYZ( xy, position.z )
-      if (RogueGD.is_2dx)
+			if (View.mode == View.MODE_2DX)
         node.position = XYZ( xy.x, Display.size.y - xy.y, position.z )
       else
         node.position = xy
@@ -201,22 +107,22 @@ class Graphic [essential]
 
     method set_position( xyz:XYZ )
       @position = xyz
-      if (RogueGD.is_2dx)
+			if (View.mode == View.MODE_2DX)
         node.position = XYZ( xyz.x, Display.size.y - xyz.y, xyz.z )
       else
         node.position = xyz
       endIf
 
     method set_rotation( z:Radians )
-      if (RogueGD.is_2d) rotation = z
-      else                  rotation = XYZ( 0, 0, z )
+			if (View.mode == View.MODE_2D) rotation = z
+      else                           rotation = XYZ( 0, 0, z )
 
     method set_rotation( @rotation )
       node.rotation = rotation
 
     method set_scale( s:Real64 )
-      if (RogueGD.is_2d) scale = XY( s, s )
-      else                  scale = XYZ( s, s, s )
+			if (View.mode == View.MODE_2D) scale = XY( s, s )
+      else                           scale = XYZ( s, s, s )
 
     method set_scale( xy:XY )
       @scale = XYZ( xy, scale.z )

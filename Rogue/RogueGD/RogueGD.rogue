@@ -10,14 +10,12 @@ $include RogueGD/Display
 $include RogueGD/Graphic
 $include RogueGD/Graphics
 $include RogueGD/Godot
-$include RogueGD/Screen
-$include RogueGD/ScreenState
+$include RogueGD/View
+$include RogueGD/ViewState
 
 class RogueGD [essential api singleton]
   PROPERTIES
-    is_2d  : Logical
-    is_2dx : Logical
-    is_3d  : Logical
+    gd_rogue      : GDObject
 
     gd_root       : GDObject
     gd_plasmacore : GDObject
@@ -29,19 +27,13 @@ class RogueGD [essential api singleton]
     gd_graphics   : GDObject
 
     message_handlers = [String:Function(GDVariant)->GDVariant]
+    views = View[]
 
   METHODS
     method init
       Global.output = Log
       Global.error = ErrorLog
-      on_message( "RogueGD.begin_new_scene", (args) => RogueGD.on_new_scene(args[0],args[1],args[2],args[3]) )
-      on_message( "RogueGD.draw",   (args) => RogueGD.on_draw )
-      on_message( "RogueGD.update", (args) => RogueGD.on_update(args[0],args[1]) )
-
-    method on_draw
-      ScreenState.on_draw
-      Screen.on_draw
-      ScreenState.after_draw
+      on_message( "RogueGD.update", (args) => RogueGD.update(args) )
 
     method on_message( name:String, handler:Function(GDVariant)->GDVariant )
       message_handlers[ name ] = handler
@@ -51,35 +43,18 @@ class RogueGD [essential api singleton]
       if (handler) return handler( args )
       else         return GDVariant()
 
-    method on_new_scene( mode:Int32, gd_root, gd_plasmacore, gd_config )
-      is_2dx = (mode == 1)
-      is_2d = (mode == 2)
-      is_3d = (mode == 3)
+    method register( view:View )
+      if (not views.contains(view)) views.add( view )
 
-      gd_scene  = gd_root.last
-      gd_assets = gd_config//Assets
-      if (gd_assets) gd_assets_graphics = gd_assets//Graphics
+      on_message( "$.configure"(view.type_name), view=>configure )
+      on_message( "$.draw"(view.type_name), view=>draw )
+      on_message( "$.update"(view.type_name), view=>update )
 
-      if (is_2d) gd_graphics = GDObject.create<<"Node2D">>( gd_config )
-      else       gd_graphics = GDObject.create<<"Node3D">>( gd_config )
-      gd_graphics.name = "Graphics"
-
-      ScreenState.on_scene_change
-
-    method on_update( dt:Real64, display_size:IntXY )
-      Display.size = display_size
-
-      on_update_begin
-
-      ScreenState.update( dt )
-      Screen.update( dt )
-
-      on_update_end
-
-    method on_update_begin
+    method update( args:GDVariant )->GDVariant
+      gd_rogue = args[0]
+      Display.dt = args[1]
       Graphics.on_update_begin
 
-    method on_update_end
-      Graphics.on_update_end
+      return $defaultValue<<GDVariant>>
 
 endClass

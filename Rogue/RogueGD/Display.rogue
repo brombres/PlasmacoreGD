@@ -3,6 +3,7 @@ module RogueGD
 class Display [singleton]
   PROPERTIES
     size      : IntXY
+		dt        : Real
 
   METHODS
     method bounds->IntBox
