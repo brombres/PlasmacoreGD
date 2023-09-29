@@ -115,35 +115,41 @@ endRoutine
 
 routine copy_products( project_filepath:String )->Logical
   # Copy build products to a specific project folder.
-  local synched_any = false
+  local synced_any = false
 
   local project_folder = File( project_filepath )
   if (not project_folder.exists) return false
 
   local output = subrogo( "copy products $ $ $"(project_folder.abs.esc,true,Console.width), &capture_output )
   if (String.exists(output))
-    synched_any = true
+    synced_any = true
   endIf
 
-	local products =
-	[
-	  "RogueGD.gd"
-		"RogueView2D.gd"
-		"RogueView2DX.gd"
-		"RogueView3D.gd"
-	]
+  return copy_script_products( project_folder, synced_any )
+endRoutine
 
-	forEach (product in products)
-    if (copy(product, "Libraries/RogueGD/Godot", project_folder ))
-			synched_any = true
-		endIf
-	endForEach
+routine copy_script_products( project_folder:File, synced_any:Logical, &bidirectional )->Logical
+  block
+    local products =
+    [
+      "RogueGD.gd"
+      "RogueView2D.gd"
+      "RogueView2DX.gd"
+      "RogueView3D.gd"
+    ]
 
-  if (copy("BuildRogueGD.rogue", "Libraries/RogueGD", "." ))
-    synched_any = true
-  endIf
+    forEach (product in products)
+      if (copy(product, "Libraries/RogueGD/Godot", project_folder, &=bidirectional ))
+        synced_any = true
+      endIf
+    endForEach
 
-  return synched_any
+    if (copy("BuildRogueGD.rogue", "Libraries/RogueGD", ".", &=bidirectional ))
+      synced_any = true
+    endIf
+  endBlock
+
+  return synced_any
 endRoutine
 
 routine rogo_deps
@@ -172,7 +178,7 @@ routine patch_gitignore( patcher:GitIgnorePatcher )
   patcher.add( "# Vim", "*.swp" )
 endRoutine
 
-routine copy( filename:String, from_path:String, project_path:String )->Logical
+routine copy( filename:String, from_path:String, project_path:String, &bidirectional )->Logical
   local src = File(from_path/filename)
   local dest = File(project_path/filename)
 
@@ -186,7 +192,7 @@ routine copy( filename:String, from_path:String, project_path:String )->Logical
 
   local copied_any = false
 
-  if (dest.exists and dest.is_newer_than(src))  # FIXME: DEV KLUDGE
+  if (bidirectional and dest.exists and dest.is_newer_than(src))
     if local n = dest.copy_to( src, &if_newer, &dry_run )
       if (n > 0)
         dest.copy_to( src, &if_newer, &verbose )

@@ -11,6 +11,14 @@ NativeRogueGD::~NativeRogueGD()
 {
 }
 
+void NativeRogueGD::check_gc()
+{
+  if ( !Engine::get_singleton()->is_editor_hint() )
+  {
+    Rogue_check_gc();
+  }
+}
+
 void NativeRogueGD::launch()
 {
   if ( !Engine::get_singleton()->is_editor_hint() )
@@ -33,6 +41,7 @@ godot::Variant NativeRogueGD::call( godot::Variant name, godot::Variant args )
 
 void NativeRogueGD::_bind_methods()
 {
+	ClassDB::bind_method( D_METHOD("check_gc"), &NativeRogueGD::check_gc );
 	ClassDB::bind_method( D_METHOD("launch"), &NativeRogueGD::launch );
 	ClassDB::bind_method( D_METHOD("call"),   &NativeRogueGD::call, DEFVAL(nullptr) );
 }

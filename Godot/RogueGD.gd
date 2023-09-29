@@ -8,6 +8,7 @@ func _ready():
 	rogue.launch()
 
 func _process(delta):
+	rogue.check_gc()
 	rogue.call( "RogueGD.update", [self,delta] )
 
 func send( message_name, args=[] ):

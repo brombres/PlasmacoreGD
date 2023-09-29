@@ -29,6 +29,7 @@ class NativeRogueGD : public RefCounted
 		NativeRogueGD();
 		~NativeRogueGD();
 
+    void check_gc();
     void launch();
     godot::Variant call( godot::Variant name, godot::Variant args );
 };
