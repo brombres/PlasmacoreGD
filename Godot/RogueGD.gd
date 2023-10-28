@@ -1,11 +1,11 @@
-extends Control
-
-enum{ MODE_2DX=1, MODE_2D=2, MODE_3D=3 }
+@tool
+extends Node
 
 @onready var rogue:NativeRogueGD = NativeRogueGD.new()
 
 func _ready():
 	rogue.launch()
+	rogue.call( "RogueGD.configure", self )
 
 func _process(delta):
 	rogue.check_gc()

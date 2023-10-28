@@ -1,5 +1,6 @@
+@tool
 class_name RogueView2DX
-extends Control
+extends GGComponent
 
 ### Optional Camera3D. If no camera is linked then RogueGD will create a 3D camera at runtime.
 #@export var camera:Camera3D

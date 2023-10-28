@@ -1,5 +1,6 @@
+@tool
 class_name RogueView3D
-extends Control
+extends GGComponent
 
 #func _ready():
 #	var assets = $Assets

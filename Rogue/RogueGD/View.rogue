@@ -1,78 +1,36 @@
 module RogueGD
 
 class View [singleton]
-  DEFINITIONS
-    MODE_2DX = 1
-    MODE_2D  = 2
-    MODE_3D  = 3
-
   PROPERTIES
-    mode = MODE_2D : Int32
-
-    node               : GDObject
-    gd_scene           : GDObject
-    gd_assets          : GDObject
-    gd_assets_graphics : GDObject
-
-    args : GDVariant
-
-    clonable_graphics = [String:Graphic]
+    args       : GDVariant
+    view_node  : GDObject
+    state      = ViewState()
 
   METHODS
     method init_object
-      if (type_name != "View")
+      if (this not isType View)
         # Only extended classes get registered
         RogueGD.register( this )
       endIf
 
+    method activate
+			View = this
+      ViewState = state
+      Display.size = view_node["/root"].visible_bounds.size
+
     method bounds->Box
-      return Box( node.control_position, node.control_size )
+      return Box( view_node.control_position, view_node.control_size )
 
     method configure( args )->GDVariant
-      node = args[0]
-      gd_scene  = node["/root"].last
-      gd_assets = node//Assets
-      if (gd_assets)
-        gd_assets.is_visible = false
-        gd_assets_graphics = gd_assets//Graphics
-      endIf
-
+      view_node = args[0]
+      ViewState.on_configure
       on_configure
+      ViewState.after_configure
 
       return $defaultValue<<GDVariant>>
 
-    method graphic( name:String )->Graphic
-      if (name.begins_with("res://"))
-				return Graphic( GDObject.load_scene(name) )
-			endIf
-
-			if (name.begins_with('%') or name.begins_with('/'))
-        return Graphic( View.node[name] )
-			endIf
-
-      if (View.gd_assets_graphics)
-        local node = View.gd_assets_graphics[name]
-        if (node) return Graphic( node )
-      endIf
-
-      if (View.gd_assets)
-        local node = View.gd_assets[name]
-        if (node) return Graphic( node )
-      endIf
-
-      if (View.gd_scene)
-        local node = View.gd_scene[name]
-        if (node) return Graphic( node )
-      endIf
-
-      local node = View.node[name]
-      if (node) return Graphic( node )
-
-			Log.println( "[RogueGD] Cannot find graphic: $"(name) )
-			return Graphic( node )  # undefined graphic
-
     method draw( args )->GDVariant
-      node = args[0]
+      view_node = args[0]
       return $defaultValue<<GDVariant>>
 
     method on_configure
@@ -82,21 +40,22 @@ class View [singleton]
       noAction
 
     method position->XY
-      return node.control_position
+      return view_node.control_position
 
-    method set_node( @node )
-			View = this
-			Display.size = node["/root"].visible_bounds.size
+    method set_view_node( @view_node )
+      activate
 
     method size->XY
-      return node.control_size
+      return view_node.control_size
 
     method update( args )->GDVariant
-      node = args[0]
+      view_node = args[0]
       Display.dt = args[1]
 
       ViewState.update
+      state = ViewState
       View.on_update
+      ViewState.after_update
 
       return $defaultValue<<GDVariant>>
 

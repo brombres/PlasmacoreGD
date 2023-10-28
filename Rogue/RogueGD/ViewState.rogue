@@ -4,6 +4,21 @@ uses Control/State
 
 class ViewState : State<<ViewState>> [singleton]
 	METHODS
+    method after_configure
+      noAction
+
+    method after_draw
+      noAction
+
+    method after_update
+      noAction
+
+    method on_configure
+      noAction
+
+    method on_draw
+      noAction
+
     method update
 			ViewState = which{ this.updated || ViewState() }
 

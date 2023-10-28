@@ -9,8 +9,11 @@ augment Rogue::GDVariant
       which (value.type)
         case Value.TYPE_UNDEFINED, Value.TYPE_NULL
           noAction
-        case Value.TYPE_BYTE, Value.TYPE_CHARACTER, Value.TYPE_INT32, Value.TYPE_INT64
+        case Value.TYPE_BYTE, Value.TYPE_CHARACTER, Value.TYPE_INT32
           local value = value->Int32
+          native @|$variant.value = $value;
+        case Value.TYPE_INT64
+          local value = value->Int64
           native @|$variant.value = $value;
         case Value.TYPE_REAL32, Value.TYPE_REAL64
           local value = value->Real64
@@ -48,9 +51,46 @@ augment Rogue::GDVariant
 
       return variant
 
+    method create( list:Byte[] )->GDVariant
+      variant = create<<PackedByteArray>>
+      variant.add( GDVariant(forEach in value) )
+      return variant
+
+    method create( list:Int32[] )->GDVariant
+      variant = create<<PackedInt32Array>>
+      variant.add( GDVariant(forEach in value) )
+      return variant
+
+    method create( list:Int64[] )->GDVariant
+      variant = create<<PackedInt64Array>>
+      variant.add( GDVariant(forEach in value) )
+      return variant
+
+    method create( list:Real32[] )->GDVariant
+      variant = create<<PackedFloat32Array>>
+      variant.add( GDVariant(forEach in value) )
+      return variant
+
+    method create( list:Real64[] )->GDVariant
+      variant = create<<PackedFloat64Array>>
+      variant.add( GDVariant(forEach in value) )
+      return variant
+
     method create<<$GodotType>>->GDVariant
       return native( "ROGUE_COMPOUND(GDVariant){ godot::$GodotType() }" )->GDVariant
 
+
+    method load_resource( res_path:String )->GDVariant
+      local v_result : GDVariant
+      local v_res_path = GDVariant( res_path )
+
+      native
+        @|if (godot::ResourceLoader::get_singleton()->exists($v_res_path.value))
+         |{
+         |  $v_result.value = godot::ResourceLoader::get_singleton()->load( $v_res_path.value );
+         |}
+
+      return v_result
 
   METHODS
     method add( variant:GDVariant )
@@ -81,6 +121,21 @@ augment Rogue::GDVariant
       else
         return $defaultValue<<GDVariant>>
       endIf
+
+    method instantiate->GDObject
+      # This GDVariant must be a resource loaded with GDVariant.load_resource()
+
+          local obj = native( "ROGUE_COMPOUND(GDObject){ (godot::Object*)($this.value) }" )->GDObject
+      local v_result : GDVariant
+
+      native
+        @|godot::PackedScene* packed_scene = (godot::PackedScene*)(godot::Object*)($this.value);
+         |if (packed_scene)
+         |{
+         |  $v_result.value = packed_scene->instantiate();
+         |}
+
+      return v_result->GDObject
 
     method is_array->Logical
       which ( native("(RogueInt32) $this.value.get_type()")->Int32 )

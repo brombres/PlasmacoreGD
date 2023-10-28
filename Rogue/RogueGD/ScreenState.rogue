@@ -1,0 +1,13 @@
+module RogueGD
+
+uses Control/State
+
+class ScreenState : State<<ScreenState>> [singleton]
+	METHODS
+    method on_configure
+      noAction
+
+    method update
+      ScreenState = which{ this.updated || ScreenState() }
+
+endClass

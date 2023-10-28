@@ -7,33 +7,29 @@ uses Math/Best
 $include RogueGD/App
 $include RogueGD/Box
 $include RogueGD/Display
-$include RogueGD/Graphic
-$include RogueGD/Graphics
+$include RogueGD/ScreenState
 $include RogueGD/Godot
 $include RogueGD/View
 $include RogueGD/ViewState
 
 class RogueGD [essential api singleton]
   PROPERTIES
-    gd_rogue      : GDObject
-
-    gd_root       : GDObject
-    gd_plasmacore : GDObject
-    gd_scene      : GDObject
-
-    gd_config     : GDObject
-    gd_assets     : GDObject
-    gd_assets_graphics   : GDObject
-    gd_graphics   : GDObject
-
+    rogue_gd         : GDObject
     message_handlers = [String:Function(GDVariant)->GDVariant]
-    views = View[]
+    views            = View[]
 
   METHODS
     method init
       Global.output = Log
       Global.error = ErrorLog
+      on_message( "RogueGD.configure", (args) => RogueGD.configure(args) )
       on_message( "RogueGD.update", (args) => RogueGD.update(args) )
+
+    method configure( args:GDVariant )->GDVariant
+      rogue_gd = args[0]
+      ScreenState.on_configure
+
+      return $defaultValue<<GDVariant>>
 
     method on_message( name:String, handler:Function(GDVariant)->GDVariant )
       message_handlers[ name ] = handler
@@ -51,9 +47,9 @@ class RogueGD [essential api singleton]
       on_message( "$.update"(view.type_name), view=>update )
 
     method update( args:GDVariant )->GDVariant
-      gd_rogue = args[0]
+      rogue_gd = args[0]
       Display.dt = args[1]
-      Graphics.on_update_begin
+      ScreenState.update
 
       return $defaultValue<<GDVariant>>
 
