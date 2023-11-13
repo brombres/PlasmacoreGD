@@ -124,8 +124,7 @@ augment Rogue::GDVariant
 
     method instantiate->GDObject
       # This GDVariant must be a resource loaded with GDVariant.load_resource()
-
-          local obj = native( "ROGUE_COMPOUND(GDObject){ (godot::Object*)($this.value) }" )->GDObject
+      local obj = native( "ROGUE_COMPOUND(GDObject){ (godot::Object*)($this.value) }" )->GDObject
       local v_result : GDVariant
 
       native

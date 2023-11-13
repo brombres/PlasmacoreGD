@@ -19,21 +19,33 @@ augment Build
     GODOT_CPP_BRANCH = "4.1"
 endAugment
 
-routine rogo_default
+routine rogo_default( platform="":String )
   rogo_deps
-  rogo_build
+  rogo_build( platform )
   rogo_run
 endRoutine
 
-routine rogo_build
+routine rogo_ios
+  rogo_build( "ios" )
+endRoutine
+
+routine rogo_android
+  rogo_build( "android" )
+endRoutine
+
+routine rogo_build( platform="":String )
   rogo_build_rogue
-	subrogo( "build skip_sync w=$"(Console.width) )
+  local cmd = "build skip_sync w=$"(Console.width)
+  if (String.exists(platform)) cmd .= appending( platform )
+  subrogo( cmd )
   sync_products
 endRoutine
 
-routine rogo_rebuild
+routine rogo_rebuild( platform="":String )
   rogo_compile_rogue
-	subrogo( "build skip_sync w=$"(Console.width) )
+  local cmd = "build skip_sync w=$"(Console.width)
+  if (String.exists(platform)) cmd .= appending( platform )
+  subrogo( cmd )
   sync_products
 endRoutine
 
